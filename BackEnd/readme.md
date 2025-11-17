@@ -1,20 +1,15 @@
-# Important Notes
+pip: 
+pip install -r requirements.txt
 
-Please make sure you have install the requirements before you run the server.
-The list of requirements can be seen in the requirements.txt
+python:
+python -m pip install -r requirements.txt
+or
+python3 -m pip install -r requirements.txt
+------------------------------------------------------
+🚀 6. Run Your API
 
-### Please use "pip install -r requirements.txt" to install the requirements
+run from /attendance-app:
+uvicorn BackEnd.main:app --reload
 
-### Please use "uvicorn myapi:app --reload" to run the backend
-
-## There are three endpoints available for this file
-
-### GET "/" for the index
-
-### GET "/todos/" for the list of todos
-
-### POST "/todos/{todo_id}" for adding new todo task based on the ID
-
-### more detail for the documentation can be accessed on thehttp://localhost:8000/docs"
-
-Have fun...
+url: 
+http://127.0.0.1:8000

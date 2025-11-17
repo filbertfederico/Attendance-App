@@ -1,20 +1,23 @@
-import "./App.css";
-import Title from "./components/Title";
-import Login from "./components/Login";
-import Register from "./components/Register";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import DinasRequest from "./pages/DinasRequest";
+import PribaadiRequest from "./pages/PribadiRequest";
+import LandingPage from "./pages/LandingPage";
+import MyDinasRequests from "./pages/myDinasRequests";
+import MyPribadiRequests from "./pages/myPribadiRequests";
+import RequestList from "./pages/adminRequestList";
 
 function App() {
   return (
-    <div className="app">
-      <Router>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route exact path="/dashboard" element={<Title />} />
-          <Route exact path="/register" element={<Register />} />
-        </Routes>
-      </Router>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/dinas-request" element={<DinasRequest />} />
+        <Route path="/pribadi-request" element={<PribaadiRequest />} />
+        <Route path="/my-dinas" element={<MyDinasRequests />} />
+        <Route path="/my-private" element={<MyPribadiRequests />} />
+        <Route path="/all-requests" element={<RequestList />} />
+      </Routes>
+    </Router>
   );
 }
 
