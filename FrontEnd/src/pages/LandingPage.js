@@ -48,20 +48,20 @@ export default function LandingPage() {
         <div className="dash-grid">
             <div className="dash-card">
                 <h3>Submit Request Dinas</h3>
-                <p>Request official leave or work-related permission.</p>
+                <p>Izin kerja & panggilan dinas</p>
                 <a className="dash-btn" href="/dinas-request">Go</a>
             </div>
 
             <div className="dash-card">
               <h3>Submit Request Pribadi</h3>
-              <p>Request time off, leave early, or come late.</p>
+              <p>Cuti, telat, pulang awal, etc</p>
               <a className="dash-btn" href="/pribadi-request">Go</a>
             </div>
 
             <div className="dash-card">
               <h3>All Requests</h3>
-              <p>View every Dinas and Private request in a single page.</p>
-              <a href="/my-requests" className="dash-btn">View All</a>
+              <p>Semua request Dinas dan Pribadi</p>
+              <a href="/my-requests" className="dash-btn">Go</a>
             </div>
 
         </div>
