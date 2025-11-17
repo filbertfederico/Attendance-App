@@ -13,7 +13,10 @@ export const api = axios.create({
 // -----------------------
 export async function postData(endpoint, data, role = "staff") {
   const res = await api.post(endpoint, data, {
-    headers: { "x-role": role },
+    headers: {
+      "Content-Type": "application/json",
+      "x-role": role
+    },
   });
   return res.data;
 }

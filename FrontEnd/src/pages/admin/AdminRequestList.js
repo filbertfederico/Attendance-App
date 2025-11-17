@@ -1,11 +1,11 @@
 // src/pages/RequestList.js
 import React, { useEffect, useState } from "react";
-import { getData } from "../api/api";
-import "../styles/request.css";
+import { getData } from "../../api/api";
+import "../../styles/request.css";
 
-export default function RequestList() {
+export default function AdminRequestList() {
   // TODO: Replace with real login
-  const [user] = useState({ name: "John Doe", role: "staff" });
+  const [user] = useState({ name: "ADMIN", role: "admin" });
 
   const [combined, setCombined] = useState([]);
 
@@ -60,7 +60,7 @@ export default function RequestList() {
 
   return (
     <div className="page-container">
-      <h2>My Requests</h2>
+      <h2>All Requests</h2>
 
       <div className="card-list">
         {combined.map((req) => (

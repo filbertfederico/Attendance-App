@@ -10,7 +10,7 @@ export default function DinasRequest() {
     purpose: "",
     timeStart: "",
     timeEnd: "",
-    status: "return",
+    status: "",
   });
 
   function handleChange(e) {
@@ -19,7 +19,11 @@ export default function DinasRequest() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await postData("/dinas", form);
+    console.log("Submitting data:", form);
+
+    const res = await postData("/dinas", form);
+    console.log("Backend response:", res);
+
     alert("Dinas request submitted!");
   }
 

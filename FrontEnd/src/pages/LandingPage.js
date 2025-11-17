@@ -7,10 +7,10 @@ export default function LandingPage() {
   // TODO: replace with real login later
   
   //user temp
-  // const [user] = useState({ name: "John Doe", role: "staff" });
+  const [user] = useState({ name: "John Doe", role: "staff" });
   
   //admin temp
-  const [user] = useState({ name: "Admin", role: "admin" });
+  // const [user] = useState({ name: "Admin", role: "admin" });
 
 
   const [stats, setStats] = useState({
@@ -47,21 +47,21 @@ export default function LandingPage() {
       {user.role === "staff" && (
         <div className="dash-grid">
             <div className="dash-card">
-                <h3>Submit Dinas Request</h3>
+                <h3>Submit Request Dinas</h3>
                 <p>Request official leave or work-related permission.</p>
                 <a className="dash-btn" href="/dinas-request">Go</a>
             </div>
 
             <div className="dash-card">
-              <h3>Submit Private Request</h3>
+              <h3>Submit Request Pribadi</h3>
               <p>Request time off, leave early, or come late.</p>
-              <a className="dash-btn" href="/private-request">Go</a>
+              <a className="dash-btn" href="/pribadi-request">Go</a>
             </div>
 
             <div className="dash-card">
               <h3>All Requests</h3>
               <p>View every Dinas and Private request in a single page.</p>
-              <a href="/all-requests" className="dash-btn">View All</a>
+              <a href="/my-requests" className="dash-btn">View All</a>
             </div>
 
         </div>

@@ -23,16 +23,28 @@ class Dinas(Base):
 
 class Pribadi(Base):
     __tablename__ = "pribadi"
+    __allow_unmapped__ = True
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     title = Column(String, nullable=False)
     request_type = Column(String, nullable=False)
 
+    # Time Off
+    dayLabel: str | None = None
     date = Column(Date, nullable=True)
+
+    # Leave Early
     short_hour = Column(Time, nullable=True)
+
+    # Come Late
+    come_late_day = Column(String, nullable=True)
     come_late_date = Column(Date, nullable=True)
     come_late_hour = Column(Time, nullable=True)
+
+    # Temp Leave
+    temp_leave_day = Column(String, nullable=True)
+    temp_leave_date = Column(Date, nullable=True)
 
     approval_status = Column(String, default="pending")
     approved_by = Column(String, nullable=True)
@@ -40,3 +52,4 @@ class Pribadi(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
+
