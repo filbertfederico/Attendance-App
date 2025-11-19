@@ -1,11 +1,18 @@
+# routers/pribadi.py
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from ..database import get_db
-from ..models import Pribadi
+from datetime import datetime
 from pydantic import BaseModel
-from datetime import datetime, date, time
+from BackEnd.database import get_db
+from BackEnd.models import Pribadi
+from .auth import get_current_user
 
 router = APIRouter()
+
+# ---------------------------
+# Pydantic model for requests
+# ---------------------------
 class PribadiRequest(BaseModel):
     name: str
     title: str
@@ -21,43 +28,56 @@ class PribadiRequest(BaseModel):
     tempLeaveDate: str | None = None
 
 
+# ---------------------------
+# Parsing helpers
+# ---------------------------
 def parse_date(value):
+    if not value:
+        return None
     try:
-        if value:
-            return datetime.strptime(value, "%Y-%m-%d").date()
+        return datetime.strptime(value, "%Y-%m-%d").date()
     except:
         return None
-    return None
+
 
 def parse_time(value):
+    if not value:
+        return None
     try:
-        if value:
-            return datetime.strptime(value, "%H:%M").time()
+        return datetime.strptime(value, "%H:%M").time()
     except:
         return None
-    return None
 
 
+# ---------------------------
+# CREATE PRIVATE REQUEST
+# POST /private/
+# ---------------------------
 @router.post("/")
-async def create_private(data: PribadiRequest, db: Session = Depends(get_db)):
+async def create_private(
+    data: PribadiRequest,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
 
     entry = Pribadi(
         name=data.name,
         title=data.title,
         request_type=data.requestType,
 
-        # cuti
         dayLabel=data.date,
         date=parse_date(data.date),
-        # plg cepat
+
         short_hour=parse_time(data.shortHour),
-        # telat
+
         come_late_day=data.comeLateDate,
         come_late_date=parse_date(data.comeLateDate),
         come_late_hour=parse_time(data.comeLateHour),
-        # izin sementara
+
         temp_leave_day=data.tempLeaveDay,
-        temp_leave_date=parse_date(data.tempLeaveDate)
+        temp_leave_date=parse_date(data.tempLeaveDate),
+
+        approval_status="pending"
     )
 
     db.add(entry)
@@ -67,56 +87,82 @@ async def create_private(data: PribadiRequest, db: Session = Depends(get_db)):
     return {"message": "Private request saved", "id": entry.id}
 
 
-
-
-# -----------------------
-# GET /private/my?name=xxx
-# -----------------------
+# ---------------------------
+# STAFF: GET MY REQUESTS
+# GET /private/my
+# ---------------------------
 @router.get("/my")
-async def my_private(name: str, db: Session = Depends(get_db)):
-    print("DEBUG: /private/my called with name =", name)
-    try:
-        result = db.query(Pribadi).filter(Pribadi.name == name).all()
-        print("DEBUG: Query result =", result)
-        return result
-    except Exception as e:
-        print("ERROR in /private/my:", e)
-        raise HTTPException(500, str(e))
+async def get_my_private(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+
+    user_name = current_user["user_id"]  # or use user.name if stored
+    result = db.query(Pribadi).filter(Pribadi.name == user_name).all()
+    return result
 
 
-# -----------------------
+# ---------------------------
+# ADMIN: GET ALL PRIVATE REQUESTS
 # GET /private/
-# -----------------------
+# ---------------------------
 @router.get("/")
-async def all_private(db: Session = Depends(get_db)):
+async def get_all_private(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+
+    if current_user["role"] != "admin":
+        raise HTTPException(403, "Admin only")
+
     return db.query(Pribadi).all()
 
 
-# -----------------------
+# ---------------------------
+# ADMIN: APPROVE
 # PUT /private/{id}/approve
-# -----------------------
+# ---------------------------
 @router.put("/{id}/approve")
-async def approve(id: int, db: Session = Depends(get_db)):
-    req = db.query(Pribadi).filter(Pribadi.id == id).first()
+async def approve_private(
+    id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
 
+    if current_user["role"] != "admin":
+        raise HTTPException(403, "Admin only")
+
+    req = db.query(Pribadi).filter(Pribadi.id == id).first()
     if not req:
-        raise HTTPException(status_code=404, detail="Request not found")
+        raise HTTPException(404, "Request not found")
 
     req.approval_status = "approved"
+    req.approved_by = current_user["user_id"]
+
     db.commit()
     return {"message": "approved"}
 
 
-# -----------------------
+# ---------------------------
+# ADMIN: DENY
 # PUT /private/{id}/deny
-# -----------------------
+# ---------------------------
 @router.put("/{id}/deny")
-async def deny(id: int, db: Session = Depends(get_db)):
-    req = db.query(Pribadi).filter(Pribadi.id == id).first()
+async def deny_private(
+    id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
 
+    if current_user["role"] != "admin":
+        raise HTTPException(403, "Admin only")
+
+    req = db.query(Pribadi).filter(Pribadi.id == id).first()
     if not req:
-        raise HTTPException(status_code=404, detail="Request not found")
+        raise HTTPException(404, "Request not found")
 
     req.approval_status = "denied"
+    req.approved_by = current_user["user_id"]
+
     db.commit()
     return {"message": "denied"}

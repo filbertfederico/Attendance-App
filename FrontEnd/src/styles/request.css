@@ -29,20 +29,35 @@ h2 {
   gap: 10px;
 }
 
-button.approve {
-  background: #28a745;
-  color: white;
-  padding: 8px 14px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+.admin-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-button.deny {
-  background: #dc3545;
-  color: white;
-  padding: 8px 14px;
+.approve-btn {
+  padding: 6px 12px;
+  background: #4CAF50;
   border: none;
-  border-radius: 8px;
+  color: white;
   cursor: pointer;
+  border-radius: 5px;
 }
+
+.deny-btn {
+  padding: 6px 12px;
+  background: #d9534f;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.approve-btn:hover {
+  background: #45a049;
+}
+
+.deny-btn:hover {
+  background: #c9302c;
+}
+

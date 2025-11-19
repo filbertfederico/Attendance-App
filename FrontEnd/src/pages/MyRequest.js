@@ -1,6 +1,7 @@
 // src/pages/RequestList.js
 import React, { useEffect, useState } from "react";
-import { getData } from "../api/api";
+import Navbar from "../components/Navbar";
+import { api } from "../api/api";
 import "../styles/request.css";
 
 // ---------- Helper Functions ----------
@@ -31,8 +32,8 @@ export default function RequestList() {
     try {
       const name = encodeURIComponent(user.name);
 
-      const dinas = await getData(`/dinas/my?name=${name}`, "staff");
-      const pribadi = await getData(`/private/my?name=${name}`, "staff");
+      const dinas = await api.get(`/dinas/my?name=${name}`, "staff");
+      const pribadi = await api.get(`/private/my?name=${name}`, "staff");
 
       console.log("Dinas Response:", dinas);
       console.log("Pribadi Response:", pribadi);
@@ -51,6 +52,8 @@ export default function RequestList() {
   }, []);
 
   return (
+  <>
+    <Navbar />
     <div className="page-container">
       <h2>All My Requests</h2>
 
@@ -114,5 +117,6 @@ export default function RequestList() {
         ))}
       </div>
     </div>
+  </>
   );
 }
