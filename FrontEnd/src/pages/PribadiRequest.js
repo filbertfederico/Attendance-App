@@ -1,4 +1,4 @@
-// src/pages/PribadiRequest.js
+// FrontEnd/src/pages/PribadiRequest.js
 import React, { useState } from "react";
 import { api } from "../api/api";
 import "../styles/form.css";
@@ -6,24 +6,16 @@ import Navbar from "../components/Navbar";
 import Swal from "sweetalert2";
 
 export default function PribadiRequest() {
-  const [form, setForm] = useState({
-    name: "",
-    title: "",
-    requestType: "time_off",
+  const userName = localStorage.getItem("name");
 
-    // TIME OFF
+  const [form, setForm] = useState({
+    title: "",
+    requestType: "",
     dayLabel: "",
     date: "",
-
-    // LEAVE EARLY
     shortHour: "",
-
-    // COME LATE
-    comeLateDay: "",
     comeLateDate: "",
     comeLateHour: "",
-
-    // TEMP LEAVE
     tempLeaveDay: "",
     tempLeaveDate: "",
   });
@@ -34,53 +26,93 @@ export default function PribadiRequest() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    console.log("Submitting data:", form);
 
-    await api.post("/private", form);
-    alert("Private Request submitted!");
+    try {
+      const payload = {
+        name: userName,
+        title: form.title,
+        requestType: form.requestType,
+        date: form.date,
+        shortHour: form.shortHour,
+        comeLateDate: form.comeLateDate,
+        comeLateHour: form.comeLateHour,
+        tempLeaveDay: form.tempLeaveDay,
+        tempLeaveDate: form.tempLeaveDate,
+      };
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Request Submitted!',
-      text: 'Your private request has been sent for approval.',
-      timer: 1800,
-      showConfirmButton: false
-    });
+      await api.post("/private/", payload);
 
+      Swal.fire({
+        icon: "success",
+        title: "Request Submitted",
+        text: "Your private request has been submitted.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      setForm({
+        title: "",
+        requestType: "",
+        date: "",
+        shortHour: "",
+        comeLateDate: "",
+        comeLateHour: "",
+        tempLeaveDay: "",
+        tempLeaveDate: "",
+      });
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Submission Failed",
+        text: "Please try again.",
+      });
+    }
   }
 
   return (
     <>
       <Navbar />
+
       <div className="form-container">
-        <h2>Private Permission Request</h2>
+        <h2>Izin Pribadi</h2>
 
         <form onSubmit={handleSubmit}>
+          <p><b>Name:</b> {userName}</p>
 
-          <label>Name:</label>
-          <input name="name" value={form.name} onChange={handleChange} required />
-
-          <label>Job Title:</label>
-          <input name="title" value={form.title} onChange={handleChange} required />
+          <label>Title:</label>
+          <input
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            required
+          />
 
           <label>Request Type:</label>
-          <select name="requestType" value={form.requestType} onChange={handleChange}>
-            <option value="time_off">Requesting Time Off (day & date)</option>
-            <option value="temp_leave">Leaving Job Temporarily</option>
-            <option value="leave_early">Leave Early (hour only)</option>
-            <option value="come_late">Come Late (day, date, hour)</option>
+          <select
+            name="requestType"
+            value={form.requestType}
+            onChange={handleChange}
+            required
+          >
+            <option value="">-- Select --</option>
+            <option value="time_off">Tidak masuk kerja</option>
+            <option value="leave_early">Pulang lebih awal</option>
+            <option value="come_late">Telat</option>
+            <option value="temp_leave">Meninggalkan pekerjaan sementara</option>
           </select>
 
-          {/* ------------------ TIME OFF ------------------ */}
+          {/* TIME OFF */}
           {form.requestType === "time_off" && (
             <>
-              <label>Day:</label>
+              <label>Day (e.g. Monday):</label>
               <input
                 type="text"
                 name="dayLabel"
-                placeholder="e.g. Monday"
                 value={form.dayLabel}
                 onChange={handleChange}
+                placeholder="e.g. Monday"
                 required
               />
 
@@ -95,71 +127,57 @@ export default function PribadiRequest() {
             </>
           )}
 
-          {/* ------------------ TEMP LEAVE ------------------ */}
-          {form.requestType === "temp_leave" && (
-            <>
-              <label>Day:</label>
-              <input
-                type="text"
-                name="tempLeaveDay"
-                value={form.tempLeaveDay}
-                onChange={handleChange}
-                required
-              />
-
-              <label>Date:</label>
-              <input
-                type="date"
-                name="tempLeaveDate"
-                value={form.tempLeaveDate}
-                onChange={handleChange}
-                required
-              />
-            </>
-          )}
-
-          {/* ------------------ LEAVE EARLY ------------------ */}
+          {/* LEAVE EARLY */}
           {form.requestType === "leave_early" && (
             <>
-              <label>Hour:</label>
+              <label>Leave Early Hour:</label>
               <input
                 type="time"
                 name="shortHour"
                 value={form.shortHour}
                 onChange={handleChange}
-                required
               />
             </>
           )}
 
-          {/* ------------------ COME LATE ------------------ */}
+          {/* COME LATE */}
           {form.requestType === "come_late" && (
             <>
-              <label>Day:</label>
-              <input
-                type="text"
-                name="comeLateDay"
-                value={form.comeLateDay}
-                onChange={handleChange}
-                required
-              />
-
-              <label>Date:</label>
+              <label>Come Late Date:</label>
               <input
                 type="date"
                 name="comeLateDate"
                 value={form.comeLateDate}
                 onChange={handleChange}
-                required
               />
 
-              <label>Hour:</label>
+              <label>Come Late Hour:</label>
               <input
                 type="time"
                 name="comeLateHour"
                 value={form.comeLateHour}
                 onChange={handleChange}
-                required
+              />
+            </>
+          )}
+
+          {/* TEMP LEAVE */}
+          {form.requestType === "temp_leave" && (
+            <>
+              <label>Temporary Leave Day Label:</label>
+              <input
+                type="text"
+                name="tempLeaveDay"
+                value={form.tempLeaveDay}
+                onChange={handleChange}
+              />
+
+              <label>Temporary Leave Date:</label>
+              <input
+                type="date"
+                name="tempLeaveDate"
+                value={form.tempLeaveDate}
+                onChange={handleChange}
               />
             </>
           )}

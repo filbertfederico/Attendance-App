@@ -64,7 +64,7 @@ async def create_private(
         title=data.title,
         request_type=data.requestType,
 
-        dayLabel=data.date,
+        day_label=data.date,
         date=parse_date(data.date),
 
         short_hour=parse_time(data.shortHour),

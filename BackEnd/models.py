@@ -39,7 +39,7 @@ class Pribadi(Base):
     title = Column(String, nullable=False)
     request_type = Column(String, nullable=False)
 
-    dayLabel = Column(String, nullable=True)
+    day_label = Column(String, nullable=True)
     date = Column(Date, nullable=True)
 
     short_hour = Column(Time, nullable=True)

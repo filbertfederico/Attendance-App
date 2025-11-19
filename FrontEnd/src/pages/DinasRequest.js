@@ -1,4 +1,4 @@
-// src/pages/DinasRequest.js
+// FrontEnd/src/pages/DinasRequest.js
 import React, { useState } from "react";
 import { api } from "../api/api";
 import "../styles/form.css";
@@ -6,13 +6,14 @@ import Navbar from "../components/Navbar";
 import Swal from "sweetalert2";
 
 export default function DinasRequest() {
+  const userName = localStorage.getItem("name");
+
   const [form, setForm] = useState({
-    name: "",
     division: "",
     purpose: "",
     timeStart: "",
     timeEnd: "",
-    status: "",
+    status: "return",
   });
 
   function handleChange(e) {
@@ -23,43 +24,91 @@ export default function DinasRequest() {
     e.preventDefault();
     console.log("Submitting data:", form);
 
-    const res = await api.post("/dinas", form);
-    console.log("Backend response:", res);
+    try {
+      const payload = {
+        name: userName,
+        division: form.division,
+        purpose: form.purpose,
+        timeStart: form.timeStart,
+        timeEnd: form.timeEnd,
+        status: form.status,
+      };
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Request Submitted!',
-      text: 'Your Dinas request has been sent for approval.',
-      timer: 1800,
-      showConfirmButton: false
-    });
+      await api.post("/dinas/", payload);
+
+      Swal.fire({
+        icon: "success",
+        title: "Request Submitted",
+        text: "Your dinas permission request has been sent.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      setForm({
+        division: "",
+        purpose: "",
+        timeStart: "",
+        timeEnd: "",
+        status: "return",
+      });
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Submission Failed",
+        text: "Please try again.",
+      });
+    }
   }
 
   return (
-    <>      <Navbar />
+    <>
+      <Navbar />
       <div className="form-container">
-        <h2>Dinas Permission Request</h2>
+        <h2>Request Izin Dinas</h2>
 
         <form onSubmit={handleSubmit}>
-          <label>Name:</label>
-          <input name="name" value={form.name} onChange={handleChange} required />
+          <p><b>Name:</b> {userName}</p>
 
-          <label>Division:</label>
-          <input name="division" value={form.division} onChange={handleChange} required />
+          <label>Divisi:</label>
+          <input
+            name="division"
+            value={form.division}
+            onChange={handleChange}
+            required
+          />
 
-          <label>Purpose:</label>
-          <input name="purpose" value={form.purpose} onChange={handleChange} required />
+          <label>Tujuan:</label>
+          <input
+            name="purpose"
+            value={form.purpose}
+            onChange={handleChange}
+            required
+          />
 
-          <label>Start Time:</label>
-          <input type="datetime-local" name="timeStart" value={form.timeStart} onChange={handleChange} required />
+          <label>Jam Mulai:</label>
+          <input
+            type="datetime-local"
+            name="timeStart"
+            value={form.timeStart}
+            onChange={handleChange}
+            required
+          />
 
-          <label>End Time:</label>
-          <input type="datetime-local" name="timeEnd" value={form.timeEnd} onChange={handleChange} required />
+          <label>Jam Selesai:</label>
+          <input
+            type="datetime-local"
+            name="timeEnd"
+            value={form.timeEnd}
+            onChange={handleChange}
+            required
+          />
 
           <label>Status:</label>
           <select name="status" value={form.status} onChange={handleChange}>
-            <option value="return">Return</option>
-            <option value="not return">Not Return</option>
+            <option value="return">Kembali ke Kantor</option>
+            <option value="not return">Tidak Kembali ke Kantor</option>
           </select>
 
           <button type="submit">Submit</button>
