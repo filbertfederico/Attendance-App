@@ -17,8 +17,8 @@ export default function AdminRequestList() {
   }, []);
 
   async function load() {
-    const dinas = await api.get("/dinas");
-    const pribadi = await api.get("/private");
+    const dinas = await api.get("/dinas/");
+    const pribadi = await api.get("/private/");
 
     const list = [
       ...dinas.data.map((d) => ({

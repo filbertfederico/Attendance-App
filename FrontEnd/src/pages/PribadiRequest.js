@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { api } from "../api/api";
 import "../styles/form.css";
 import Navbar from "../components/Navbar";
+import Swal from "sweetalert2";
 
 export default function PribadiRequest() {
   const [form, setForm] = useState({
@@ -37,6 +38,15 @@ export default function PribadiRequest() {
 
     await api.post("/private", form);
     alert("Private Request submitted!");
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Request Submitted!',
+      text: 'Your private request has been sent for approval.',
+      timer: 1800,
+      showConfirmButton: false
+    });
+
   }
 
   return (

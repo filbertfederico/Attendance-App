@@ -11,7 +11,7 @@ from .auth import get_current_user
 router = APIRouter()
 
 # ---------------------------
-# Pydantic model for requests
+# Pydantic model
 # ---------------------------
 class PribadiRequest(BaseModel):
     name: str
@@ -51,7 +51,6 @@ def parse_time(value):
 
 # ---------------------------
 # CREATE PRIVATE REQUEST
-# POST /private/
 # ---------------------------
 @router.post("/")
 async def create_private(
@@ -89,7 +88,6 @@ async def create_private(
 
 # ---------------------------
 # STAFF: GET MY REQUESTS
-# GET /private/my
 # ---------------------------
 @router.get("/my")
 async def get_my_private(
@@ -97,14 +95,15 @@ async def get_my_private(
     db: Session = Depends(get_db)
 ):
 
-    user_name = current_user["user_id"]  # or use user.name if stored
+    # Filter by name (your table uses names)
+    user_name = current_user.name
+
     result = db.query(Pribadi).filter(Pribadi.name == user_name).all()
     return result
 
 
 # ---------------------------
-# ADMIN: GET ALL PRIVATE REQUESTS
-# GET /private/
+# ADMIN: GET ALL
 # ---------------------------
 @router.get("/")
 async def get_all_private(
@@ -112,7 +111,7 @@ async def get_all_private(
     db: Session = Depends(get_db)
 ):
 
-    if current_user["role"] != "admin":
+    if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
 
     return db.query(Pribadi).all()
@@ -120,7 +119,6 @@ async def get_all_private(
 
 # ---------------------------
 # ADMIN: APPROVE
-# PUT /private/{id}/approve
 # ---------------------------
 @router.put("/{id}/approve")
 async def approve_private(
@@ -129,7 +127,7 @@ async def approve_private(
     db: Session = Depends(get_db)
 ):
 
-    if current_user["role"] != "admin":
+    if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
 
     req = db.query(Pribadi).filter(Pribadi.id == id).first()
@@ -137,15 +135,14 @@ async def approve_private(
         raise HTTPException(404, "Request not found")
 
     req.approval_status = "approved"
-    req.approved_by = current_user["user_id"]
-
+    req.approved_by = current_user.name  # FIX
     db.commit()
+
     return {"message": "approved"}
 
 
 # ---------------------------
 # ADMIN: DENY
-# PUT /private/{id}/deny
 # ---------------------------
 @router.put("/{id}/deny")
 async def deny_private(
@@ -154,7 +151,7 @@ async def deny_private(
     db: Session = Depends(get_db)
 ):
 
-    if current_user["role"] != "admin":
+    if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
 
     req = db.query(Pribadi).filter(Pribadi.id == id).first()
@@ -162,7 +159,7 @@ async def deny_private(
         raise HTTPException(404, "Request not found")
 
     req.approval_status = "denied"
-    req.approved_by = current_user["user_id"]
-
+    req.approved_by = current_user.name  # FIX
     db.commit()
+
     return {"message": "denied"}

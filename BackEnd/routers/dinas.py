@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from BackEnd.models import Dinas
 from BackEnd.database import get_db
-from routers.firebase_auth import get_current_user
+from .auth import get_current_user
 
 router = APIRouter()
 
@@ -65,13 +65,13 @@ async def get_my_dinas(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    result = db.query(Dinas).filter(Dinas.name == current_user["user_id"]).all()
+    # Filter by the user's name (based on your schema)
+    result = db.query(Dinas).filter(Dinas.name == current_user.name).all()
     return result
 
 
 # ---------------------
-# ADMIN: GET ALL DINAS
-# GET /dinas/
+# ADMIN: GET ALL
 # ---------------------
 @router.get("/")
 async def get_all_dinas(
@@ -79,7 +79,7 @@ async def get_all_dinas(
     db: Session = Depends(get_db)
 ):
 
-    if current_user["role"] != "admin":
+    if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
 
     return db.query(Dinas).all()
@@ -87,7 +87,6 @@ async def get_all_dinas(
 
 # ---------------------
 # ADMIN: APPROVE
-# PUT /dinas/{id}/approve
 # ---------------------
 @router.put("/{id}/approve")
 async def approve_dinas(
@@ -95,7 +94,7 @@ async def approve_dinas(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if current_user["role"] != "admin":
+    if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
 
     req = db.query(Dinas).filter(Dinas.id == id).first()
@@ -103,15 +102,14 @@ async def approve_dinas(
         raise HTTPException(404, "Request not found")
 
     req.approval_status = "approved"
-    req.approved_by = current_user["user_id"]
-    db.commit()
+    req.approved_by = current_user.name
 
+    db.commit()
     return {"message": "approved", "id": id}
 
 
 # ---------------------
 # ADMIN: DENY
-# PUT /dinas/{id}/deny
 # ---------------------
 @router.put("/{id}/deny")
 async def deny_dinas(
@@ -119,7 +117,7 @@ async def deny_dinas(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if current_user["role"] != "admin":
+    if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
 
     req = db.query(Dinas).filter(Dinas.id == id).first()
@@ -127,7 +125,7 @@ async def deny_dinas(
         raise HTTPException(404, "Request not found")
 
     req.approval_status = "denied"
-    req.approved_by = current_user["user_id"]
-    db.commit()
+    req.approved_by = current_user.name
 
+    db.commit()
     return {"message": "denied", "id": id}

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";       
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function Login() {
 
   const login = async (e) => {
     e.preventDefault();
+    console.log("LOGIN CLICKED!");
     setError("");
 
     try {
@@ -34,6 +36,14 @@ export default function Login() {
       if (!meRes.ok) throw new Error("Failed to fetch user role");
 
       const me = await meRes.json();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Login Successful',
+        text: `Welcome, ${me.name}!`,
+        timer: 1500,
+        showConfirmButton: false
+      });
 
       // Save
       localStorage.setItem("token", token);

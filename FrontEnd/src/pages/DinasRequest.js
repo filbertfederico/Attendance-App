@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { api } from "../api/api";
 import "../styles/form.css";
 import Navbar from "../components/Navbar";
+import Swal from "sweetalert2";
 
 export default function DinasRequest() {
   const [form, setForm] = useState({
@@ -25,7 +26,13 @@ export default function DinasRequest() {
     const res = await api.post("/dinas", form);
     console.log("Backend response:", res);
 
-    alert("Dinas request submitted!");
+    Swal.fire({
+      icon: 'success',
+      title: 'Request Submitted!',
+      text: 'Your Dinas request has been sent for approval.',
+      timer: 1800,
+      showConfirmButton: false
+    });
   }
 
   return (

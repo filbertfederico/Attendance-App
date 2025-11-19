@@ -18,28 +18,29 @@ function formatDate(dateStr) {
 
 function formatTime(timeStr) {
   if (!timeStr) return "";
-  return timeStr.slice(0, 5); // HH:MM
+  return timeStr.slice(0, 5);
 }
 
 export default function RequestList() {
-  // TEMP user
-  const [user] = useState({ name: "John Doe", role: "staff" });
+  // REAL user (from login)
+  const user = {
+    name: localStorage.getItem("name"),
+    role: localStorage.getItem("role"),
+  };
 
   const [dinasList, setDinasList] = useState([]);
   const [pribadiList, setPribadiList] = useState([]);
 
   async function loadData() {
     try {
-      const name = encodeURIComponent(user.name);
+      const dinas = await api.get("/dinas/my");
+      const pribadi = await api.get("/private/my");
 
-      const dinas = await api.get(`/dinas/my?name=${name}`, "staff");
-      const pribadi = await api.get(`/private/my?name=${name}`, "staff");
+      console.log("Dinas Response:", dinas.data);
+      console.log("Pribadi Response:", pribadi.data);
 
-      console.log("Dinas Response:", dinas);
-      console.log("Pribadi Response:", pribadi);
-
-      setDinasList(Array.isArray(dinas) ? dinas : []);
-      setPribadiList(Array.isArray(pribadi) ? pribadi : []);
+      setDinasList(Array.isArray(dinas.data) ? dinas.data : []);
+      setPribadiList(Array.isArray(pribadi.data) ? pribadi.data : []);
     } catch (err) {
       console.error("Error loading request data:", err);
       setDinasList([]);
@@ -52,71 +53,60 @@ export default function RequestList() {
   }, []);
 
   return (
-  <>
-    <Navbar />
-    <div className="page-container">
-      <h2>All My Requests</h2>
+    <>
+      <Navbar />
+      <div className="page-container">
+        <h2>All My Requests</h2>
 
-      <div className="card-list">
-        {/* ---------- DINAS REQUESTS ---------- */}
-        {dinasList.map((d) => (
-          <div className="card" key={`d-${d.id}`}>
-            <h3>Dinas Request</h3>
+        <div className="card-list">
 
-            <p><b>Name:</b> {d.name}</p>
-            <p><b>Division:</b> {d.division}</p>
-            <p><b>Purpose:</b> {d.purpose}</p>
+          {/* ---------- DINAS REQUESTS ---------- */}
+          {dinasList.map((d) => (
+            <div className="card" key={`d-${d.id}`}>
+              <h3>Dinas Request</h3>
 
-            <p>
-              <b>Time:</b> {d.time_start} → {d.time_end}
-            </p>
+              <p><b>Name:</b> {d.name}</p>
+              <p><b>Division:</b> {d.division}</p>
+              <p><b>Purpose:</b> {d.purpose}</p>
+              <p><b>Time:</b> {d.time_start} → {d.time_end}</p>
+              <p><b>Status:</b> {d.status}</p>
+              <p><b>Approval Status:</b> {d.approval_status}</p>
+              <p><b>Submitted At:</b> {d.created_at}</p>
+            </div>
+          ))}
 
-            <p><b>Status:</b> {d.status}</p>
-            <p><b>Approval Status:</b> {d.approval_status}</p>
+          {/* ---------- PRIVATE REQUESTS ---------- */}
+          {pribadiList.map((p) => (
+            <div className="card" key={`p-${p.id}`}>
+              <h3>Private Request</h3>
 
-            <p><b>Submitted At:</b> {d.created_at}</p>
-          </div>
-        ))}
+              <p><b>Name:</b> {p.name}</p>
+              <p><b>Type:</b> {p.request_type}</p>
+              <p><b>Status:</b> {p.approval_status}</p>
 
-        {/* ---------- PRIVATE REQUESTS ---------- */}
-        {pribadiList.map((p) => (
-          <div className="card" key={`p-${p.id}`}>
-            <h3>Private Request</h3>
+              <p><b>Details:</b>{" "}
 
-            <p><b>Name:</b> {p.name}</p>
-            <p><b>Type:</b> {p.request_type}</p>
-            <p><b>Status:</b> {p.approval_status}</p>
+                {p.request_type === "time_off" && (
+                  <>Day Off: {formatDate(p.date)}</>
+                )}
 
-            <p>
-              <b>Detail:</b>{" "}
+                {p.request_type === "leave_early" && (
+                  <>Leave Early: {formatTime(p.short_hour)}</>
+                )}
 
-              {/* TIME OFF */}
-              {p.request_type === "time_off" && (
-                <>Day Off: {formatDate(p.date)}</>
-              )}
+                {p.request_type === "come_late" && (
+                  <>Come Late: {formatDate(p.come_late_date)} at {formatTime(p.come_late_hour)}</>
+                )}
 
-              {/* LEAVE EARLY */}
-              {p.request_type === "leave_early" && (
-                <>Leave Early at: {formatTime(p.short_hour)}</>
-              )}
+                {p.request_type === "temp_leave" && (
+                  <>Temporary Leave: {formatDate(p.temp_leave_date)}</>
+                )}
 
-              {/* COME LATE */}
-              {p.request_type === "come_late" && (
-                <>
-                  Come Late: {formatDate(p.come_late_date)} at{" "}
-                  {formatTime(p.come_late_hour)}
-                </>
-              )}
-
-              {/* TEMP LEAVE */}
-              {p.request_type === "temp_leave" && (
-                <>Temporary Leave on: {formatDate(p.temp_leave_date)}</>
-              )}
-            </p>
-          </div>
-        ))}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  </>
+    </>
   );
 }
