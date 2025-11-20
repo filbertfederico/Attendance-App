@@ -31,7 +31,11 @@ origins = [
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins or ["*"],
+    allow_origins=[
+        "https://attendance-app-befe2.web.app",
+        "http://localhost:3000"
+        ],
+    
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
