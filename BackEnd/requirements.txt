@@ -1,9 +1,9 @@
 fastapi
 uvicorn
+
 sqlalchemy
 psycopg2-binary
 
-# Environment variables
 python-dotenv
 pydantic
 pydantic-settings
@@ -11,8 +11,11 @@ pydantic-settings
 # Firebase token verification
 google-auth
 
-# Security + JWT (kept for compatibility)
+requests
+
+# Security/JWT (optional, you keep them for compatibility)
 python-jose
 passlib[bcrypt]
 
-# pip install -r requirements.txt
+# CORS
+fastapi[all]

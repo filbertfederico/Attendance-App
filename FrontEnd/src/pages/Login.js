@@ -27,7 +27,7 @@ export default function Login() {
       const res = await signInWithEmailAndPassword(auth, trimmedEmail, pw);
       const token = await res.user.getIdToken();
 
-      console.log("📤 TOKEN SENT TO BACKEND:", token.substring(0, 40) + "...");
+      console.log("📤 TOKEN SENT TO BACKEND");
 
       // Verify with backend
       const meRes = await fetch("http://127.0.0.1:8000/auth/me", {

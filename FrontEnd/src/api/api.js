@@ -1,4 +1,4 @@
-import { auth } from "../firebase";
+// FrontEnd/src/api/api.js
 import axios from "axios";
 
 export const api = axios.create({
