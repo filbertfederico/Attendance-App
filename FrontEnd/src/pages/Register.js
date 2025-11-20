@@ -31,7 +31,6 @@ export default function Register() {
         <input name="password" type="password" placeholder="Password" onChange={onChange} />
         <select name="role" onChange={onChange}>
           <option value="staff">Staff</option>
-          <option value="admin">Admin</option>
         </select>
         <button>Register</button>
       </form>

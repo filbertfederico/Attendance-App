@@ -1,6 +1,6 @@
 // src/pages/Dashboard.js
 import React, { useEffect, useState } from "react";
-import { api } from "../api/api"; // we will use /auth/me
+import { api } from "../api/api";
 import { getData } from "../api/api";
 import { useNavigate } from "react-router-dom";
 import "../styles/dashboard.css";

@@ -1,3 +1,4 @@
+// FrontEnd\src\components\ProtectedRoute.js
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -10,7 +11,6 @@ import MyRequest from "./pages/MyRequest";
 
 // ADMIN PAGES
 import AdminRequestList from "./pages/admin/AdminRequest";
-
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -69,8 +69,8 @@ function App() {
           }
         />
 
-        {/* Unauthorized Page (Optional) */}
-        <Route path="/unauthorized" element={<h1>Unauthorized</h1>} />
+        {/* Unauthorized Page */}
+        <Route path="*" element={<h1>Unauthorized</h1>} />
       </Routes>
     </Router>
   );
