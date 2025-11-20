@@ -2,7 +2,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "https://attendance-be.onrender.com"
+  baseURL: process.env.REACT_APP_API_URL || "https://attendance-app-vwy8.onrender.com"
 });
 
 // Firebase token
