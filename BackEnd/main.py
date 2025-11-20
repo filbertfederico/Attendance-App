@@ -24,18 +24,19 @@ app = FastAPI(title="Attendance API")
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
+    # Firebase Hosting (Production FE)
     "https://attendance-app-befe2.web.app",
-    "https://attendance-app-befe2.firebaseapp.com"
+    "https://attendance-app-befe2.firebaseapp.com",
+
+    # Render Backend (allow for preflight / redirects)
+    "https://attendance-app-vwy8.onrender.com"
+
 ]
 
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://attendance-app-befe2.web.app",
-        "http://localhost:3000"
-        ],
-    
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,4 +49,5 @@ app.include_router(dinas_router, prefix="/dinas", tags=["Dinas"])
 
 @app.get("/")
 def home():
-    return {"message": "Permission Slip API is running"}
+    return {"message": "Permission Slip API is running",
+            "status": "OK"}
