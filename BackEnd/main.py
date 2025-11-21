@@ -1,39 +1,37 @@
 # BackEnd/main.py
-from dotenv import load_dotenv
-from pathlib import Path
-
-env_path = Path(__file__).resolve().parent / ".env"
-load_dotenv(env_path)
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
 
-
-from .database import Base, engine
+from BackEnd.database import Base, engine
 from BackEnd.routers.auth import router as auth_router
 from BackEnd.routers.pribadi import router as pribadi_router
 from BackEnd.routers.dinas import router as dinas_router
 
+# Load .env
+load_dotenv()
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+app = FastAPI()
 
-app = FastAPI(title="Attendance API")
-
-# Allowed origins
+# -----------------------------
+# CORS ORIGINS
+# -----------------------------
 origins = [
-    "http://localhost:5173",
     "http://localhost:3000",
-    # Firebase Hosting (Production FE)
+    "http://localhost:5173",
+
+    # Firebase Hosting
     "https://attendance-app-befe2.web.app",
     "https://attendance-app-befe2.firebaseapp.com",
 
-    # Render Backend (allow for preflight / redirects)
-    "https://attendance-app-vwy8.onrender.com"
-
+    # Render Backend URL
+    "https://attendance-app-vwy8.onrender.com",
 ]
 
-# CORS
+# -----------------------------
+# ADD CORS MIDDLEWARE
+# -----------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -42,12 +40,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
-app.include_router(auth_router, prefix="/auth", tags=["Auth"])
-app.include_router(pribadi_router, prefix="/private", tags=["Pribadi"])
-app.include_router(dinas_router, prefix="/dinas", tags=["Dinas"])
-
+# -----------------------------
+# ROOT ROUTE
+# -----------------------------
 @app.get("/")
 def home():
-    return {"message": "Permission Slip API is running",
-            "status": "OK"}
+    return {"message": "Permission Slip API is running"}
+
+
+# -----------------------------
+# INCLUDE ROUTERS
+# -----------------------------
+app.include_router(auth_router, prefix="/auth")
+app.include_router(pribadi_router, prefix="/private")
+app.include_router(dinas_router, prefix="/dinas")
+
+
+# -----------------------------
+# CREATE TABLES ON STARTUP
+# -----------------------------
+Base.metadata.create_all(bind=engine)
