@@ -2,15 +2,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+# Load .env
+load_dotenv()
 import os
 
 from BackEnd.database import Base, engine
 from BackEnd.routers.auth import router as auth_router
 from BackEnd.routers.pribadi import router as pribadi_router
-from BackEnd.routers.dinas import router as dinas_router
+from BackEnd.routers.dinasDalamKota import router as dinas_router
 
-# Load .env
-load_dotenv()
 
 app = FastAPI()
 

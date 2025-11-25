@@ -19,7 +19,6 @@ function App() {
       <Routes>
         {/* PUBLIC */}
         <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
 
         {/* STAFF + ADMIN */}
         <Route

@@ -17,13 +17,13 @@ export default function Navbar() {
     localStorage.removeItem("name");
     localStorage.removeItem("email");
 
-    navigate("/login");
+    navigate("/");
   };
 
   return (
     <nav className="navbar">
       <div className="nav-left" onClick={() => navigate("/dashboard")}>
-        <h2 className="nav-logo">Attendance App</h2>
+        <h2 className="nav-logo">IMS</h2>
       </div>
 
       <div className="nav-links">
@@ -32,9 +32,9 @@ export default function Navbar() {
         {role === "staff" && (
           <>
             <a onClick={() => navigate("/home")}>Home</a>
-            <a onClick={() => navigate("/dinas-request")}>Dinas</a>
-            <a onClick={() => navigate("/pribadi-request")}>Pribadi</a>
-            <a onClick={() => navigate("/my-requests")}>My Requests</a>
+            <a onClick={() => navigate("/switching")}>Dinas</a>
+            <a onClick={() => navigate("/pribadi-request")}>Izin</a>
+            <a onClick={() => navigate("/my-requests")}>Semua Form</a>
           </>
         )}
 
@@ -42,7 +42,7 @@ export default function Navbar() {
         {role === "admin" && (
           <>
             <a onClick={() => navigate("/dashboard")}>Home</a>
-            <a onClick={() => navigate("/admin/all-requests")}>All Requests</a>
+            <a onClick={() => navigate("/admin/all-requests")}>Semua Requests</a>
           </>
         )}
 
@@ -52,4 +52,5 @@ export default function Navbar() {
       </div>
     </nav>
   );
-}
+} 
+

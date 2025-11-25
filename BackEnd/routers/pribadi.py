@@ -17,6 +17,7 @@ class PribadiRequest(BaseModel):
     name: str
     title: str
     requestType: str
+    division: str
 
     date: str | None = None
     shortHour: str | None = None
@@ -24,8 +25,8 @@ class PribadiRequest(BaseModel):
     comeLateDate: str | None = None
     comeLateHour: str | None = None
 
-    tempLeaveDay: str | None = None
-    tempLeaveDate: str | None = None
+    tempLeaveStart: str | None = None
+    tempLeaveEnd: str | None = None
 
 
 # ---------------------------
@@ -51,6 +52,7 @@ def parse_time(value):
 
 # ---------------------------
 # CREATE PRIVATE REQUEST
+# /POST
 # ---------------------------
 @router.post("/")
 async def create_private(
@@ -62,6 +64,7 @@ async def create_private(
     entry = Pribadi(
         name=data.name,
         title=data.title,
+        division=data.division,
         request_type=data.requestType,
 
         day_label=data.date,
@@ -73,7 +76,7 @@ async def create_private(
         come_late_date=parse_date(data.comeLateDate),
         come_late_hour=parse_time(data.comeLateHour),
 
-        temp_leave_day=data.tempLeaveDay,
+        temp_leave_day=(data.tempLeaveDay),
         temp_leave_date=parse_date(data.tempLeaveDate),
 
         approval_status="pending"
@@ -105,7 +108,7 @@ async def get_my_private(
 # ---------------------------
 # ADMIN: GET ALL
 # ---------------------------
-@router.get("/")
+@router.get("/all")
 async def get_all_private(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)

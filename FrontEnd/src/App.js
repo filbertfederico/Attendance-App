@@ -5,7 +5,9 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 
 // STAFF PAGES
-import DinasRequest from "./pages/DinasRequest";
+import DinasDalamKotaRequest from "./pages/DinasDalamKotaRequest";
+import DinasLuarKotaRequest from "./pages/DinasLuarKotaRequest";
+import DinasSwitching from "./pages/DinasSwitching";
 import PribadiRequest from "./pages/PribadiRequest";
 import MyRequest from "./pages/MyRequest";
 
@@ -18,15 +20,16 @@ function App() {
       <Routes>
         {/* login */}
         <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
 
         {/* HOME */}
         <Route path="/home" element={<Dashboard />} />
 
         {/* STAFF ROUTES */}
-        <Route path="/dinas-request" element={<DinasRequest />} />
+        <Route path="/dinas-dalam-kota-request" element={<DinasDalamKotaRequest />} />
+        <Route path="/dinas-luar-kota-request" element={<DinasLuarKotaRequest />} />        
         <Route path="/pribadi-request" element={<PribadiRequest />} />
         <Route path="/my-requests" element={<MyRequest />} />
+        <Route path="/switching" element={<DinasSwitching />} />
 
         {/* ADMIN ROUTE */}
         <Route path="/admin/all-requests" element={<AdminRequestList />} />

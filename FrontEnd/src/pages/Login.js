@@ -12,6 +12,7 @@ export default function Login() {
   const [pw, setPw] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
 
   const login = async (e) => {
     e.preventDefault();
@@ -27,10 +28,10 @@ export default function Login() {
       const res = await signInWithEmailAndPassword(auth, trimmedEmail, pw);
       const token = await res.user.getIdToken();
 
-      console.log("📤 TOKEN SENT TO BACKEND");
+      console.log("📤 TOKEN SENT TO BACKEND",{token});
 
       // Verify with backend
-      const meRes = await fetch("https://attendance-app-vwy8.onrender.com", {
+      const meRes = await fetch("https://attendance-app-vwy8.onrender.com/auth/me", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -43,22 +44,23 @@ export default function Login() {
 
       const me = await meRes.json();
 
-      Swal.fire({
-        icon: "success",
-        title: "Login Successful",
-        text: `Welcome, ${me.name}!`,
-        timer: 1600,
-        showConfirmButton: false,
-      });
-
+      
       // Save session
       localStorage.setItem("token", token);
       localStorage.setItem("role", me.role);
       localStorage.setItem("name", me.name);
+        
+      Swal.fire({
+        icon: "success",
+        title: "Login Successful",
+        text: `Welcome, ${me.name}!`,
+        timer: 10000,
+        showConfirmButton: false,
+      });
 
       // Redirect
       navigate(me.role === "admin" ? "/admin/all-requests" : "/home");
-
+      
     } catch (err) {
       console.error("🔥 LOGIN ERROR:", err);
 
@@ -66,13 +68,12 @@ export default function Login() {
 
       // Firebase-specific errors
       if (err.code === "auth/user-not-found") msg = "User not found.";
-      if (err.code === "auth/wrong-password") msg = "Incorrect password.";
       if (err.code === "auth/invalid-email") msg = "Invalid email format.";
       if (err.code === "auth/network-request-failed") msg = "Network error.";
-
+      
       Swal.fire({
         icon: "error",
-        title: "Login Failed",
+        title: "Login Gagal",
         text: msg,
       });
 
@@ -81,6 +82,8 @@ export default function Login() {
 
     setLoading(false);
   };
+
+  
 
   return (
     <div style={{ maxWidth: "320px", margin: "60px auto" }}>

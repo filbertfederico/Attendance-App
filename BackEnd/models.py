@@ -11,8 +11,8 @@ class User(Base):
     role = Column(String, default="staff")
 
 
-class Dinas(Base):
-    __tablename__ = "dinas"
+class DinasDalamKota(Base):
+    __tablename__ = "dinas-dalam-kota"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
@@ -36,6 +36,7 @@ class Pribadi(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
+    division = Column(String, nullable=False)
     title = Column(String, nullable=False)
     request_type = Column(String, nullable=False)
 
@@ -48,12 +49,12 @@ class Pribadi(Base):
     come_late_date = Column(Date, nullable=True)
     come_late_hour = Column(Time, nullable=True)
 
-    temp_leave_day = Column(String, nullable=True)
-    temp_leave_date = Column(Date, nullable=True)
+    temp_leave_start = Column(Date, nullable=True)
+    temp_leave_end = Column(Date, nullable=True)
 
     approval_status = Column(String, default="pending")
     approved_by = Column(String, nullable=True)
     notes = Column(Text, nullable=True)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now)

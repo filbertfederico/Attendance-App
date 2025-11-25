@@ -8,8 +8,7 @@ import Navbar from "../components/Navbar";
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
+  const [loading, setLoading] = useState(true); 
   // -----------------------------------------
   // LOAD REAL USER FROM BACKEND
   // -----------------------------------------
@@ -18,7 +17,6 @@ export default function Dashboard() {
       const res = await api.get("/auth/me");
 
       setUser(res.data);
-
       // Cache user info
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("name", res.data.name);
@@ -26,7 +24,7 @@ export default function Dashboard() {
 
     } catch (err) {
       console.log("User not logged in → redirecting to login");
-      navigate("/login");
+      navigate("/");
     } finally {
       setLoading(false);
     }
@@ -34,14 +32,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadUser();
-  }, []);
+  } );
 
   // -----------------------------------------
   // PREVENT RENDER UNTIL USER LOADED
   // -----------------------------------------
   if (loading) return <div className="loading">Loading...</div>;
-  if (!user) return null; // failsafe
-
+  if (!user) return null; // failsafe 
   // -----------------------------------------
   // STAFF DASHBOARD UI
   // -----------------------------------------
@@ -49,27 +46,23 @@ export default function Dashboard() {
     <>
       <Navbar />
       <div className="dash-container">
-        <h1>Welcome, {user.name}</h1>
-        <h3>Role: {user.role.toUpperCase()}</h3>
-
+        <h1>Selamat Datang, {user.name}</h1>  
         {/* STAFF ONLY DASHBOARD */}
         {user.role === "staff" && (
           <div className="dash-grid">
             <div className="dash-card">
-              <h3>Submit Request Dinas</h3>
-              <p>Izin kerja & tugas dinas</p>
-              <a className="dash-btn" href="/dinas-request">Go</a>
-            </div>
-
+              <h3>Form Dinas</h3>
+              <p>Surat perjalan dinas luar & dalam kota</p>
+              <a className="dash-btn" href="/switching">Go</a>
+            </div>  
             <div className="dash-card">
-              <h3>Submit Request Pribadi</h3>
-              <p>Cuti, izin, telat, pulang awal</p>
+              <h3>Form Izin</h3>
+              <p>Cuti, kepergian sementara, telat, pulang awal</p>
               <a className="dash-btn" href="/pribadi-request">Go</a>
-            </div>
-
+            </div>  
             <div className="dash-card">
-              <h3>All My Requests</h3>
-              <p>Lihat semua request Dinas & Pribadi</p>
+              <h3>Semua Izin</h3>
+              <p>Lihat semua form dinas & keperluan lainnya</p>
               <a className="dash-btn" href="/my-requests">Go</a>
             </div>
           </div>
@@ -77,4 +70,4 @@ export default function Dashboard() {
       </div>
     </>
   );
-}
+};

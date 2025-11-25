@@ -1,4 +1,5 @@
 // FrontEnd/src/pages/PribadiRequest.js
+//Form izin (pribadi)
 import React, { useState } from "react";
 import { api } from "../api/api";
 import "../styles/form.css";
@@ -7,17 +8,17 @@ import Swal from "sweetalert2";
 
 export default function PribadiRequest() {
   const userName = localStorage.getItem("name");
-
   const [form, setForm] = useState({
     title: "",
+    division: "",
     requestType: "",
     dayLabel: "",
     date: "",
     shortHour: "",
     comeLateDate: "",
     comeLateHour: "",
-    tempLeaveDay: "",
-    tempLeaveDate: "",
+    tempLeaveStart: "",
+    tempLeaveEnd: "",
   });
 
   function handleChange(e) {
@@ -31,21 +32,22 @@ export default function PribadiRequest() {
       const payload = {
         name: userName,
         title: form.title,
+        division: form.division,
         requestType: form.requestType,
         date: form.date,
         shortHour: form.shortHour,
         comeLateDate: form.comeLateDate,
         comeLateHour: form.comeLateHour,
-        tempLeaveDay: form.tempLeaveDay,
-        tempLeaveDate: form.tempLeaveDate,
+        tempLeaveStart: form.tempLeaveStart,
+        tempLeaveEnd: form.tempLeaveEnd,
       };
 
       await api.post("/private/", payload);
 
       Swal.fire({
         icon: "success",
-        title: "Request Submitted",
-        text: "Your private request has been submitted.",
+        title: "Izin Terkumpulkan",
+        text: "Izin Anda telah diajukan.",
         timer: 1500,
         showConfirmButton: false,
       });
@@ -53,20 +55,21 @@ export default function PribadiRequest() {
       setForm({
         title: "",
         requestType: "",
+        division: "",
         date: "",
         shortHour: "",
         comeLateDate: "",
         comeLateHour: "",
-        tempLeaveDay: "",
-        tempLeaveDate: "",
+        tempLeaveStart: "",
+        tempLeaveEnd: "",
       });
 
     } catch (err) {
       console.error(err);
       Swal.fire({
         icon: "error",
-        title: "Submission Failed",
-        text: "Please try again.",
+        title: "Gagal Mengirim Izin",
+        text: "Coba lagi.",
       });
     }
   }
@@ -76,20 +79,20 @@ export default function PribadiRequest() {
       <Navbar />
 
       <div className="form-container">
-        <h2>Izin Pribadi</h2>
+        <h2>Form Izin</h2>
+        <h2>Meninggalkan Pekerjaan</h2>
 
         <form onSubmit={handleSubmit}>
-          <p><b>Name:</b> {userName}</p>
+          <p><b>Nama:</b> {userName}</p>
 
-          <label>Title:</label>
-          <input
-            name="title"
-            value={form.title}
+          <p><b>Divisi:</b><input
+            name="division"
+            value={form.division}
             onChange={handleChange}
             required
-          />
+          /></p>
 
-          <label>Request Type:</label>
+          <label>Mengajukan permohonan izin:</label>
           <select
             name="requestType"
             value={form.requestType}
@@ -99,24 +102,14 @@ export default function PribadiRequest() {
             <option value="">-- Select --</option>
             <option value="time_off">Tidak masuk kerja</option>
             <option value="leave_early">Pulang lebih awal</option>
-            <option value="come_late">Telat</option>
+            <option value="come_late">Datang terlambat</option>
             <option value="temp_leave">Meninggalkan pekerjaan sementara</option>
           </select>
 
           {/* TIME OFF */}
           {form.requestType === "time_off" && (
-            <>
-              <label>Day (e.g. Monday):</label>
-              <input
-                type="text"
-                name="dayLabel"
-                value={form.dayLabel}
-                onChange={handleChange}
-                placeholder="e.g. Monday"
-                required
-              />
-
-              <label>Date:</label>
+            <>              
+              <label>Tanggal:</label>
               <input
                 type="date"
                 name="date"
@@ -130,7 +123,7 @@ export default function PribadiRequest() {
           {/* LEAVE EARLY */}
           {form.requestType === "leave_early" && (
             <>
-              <label>Leave Early Hour:</label>
+              <label>Jam:</label>
               <input
                 type="time"
                 name="shortHour"
@@ -143,7 +136,7 @@ export default function PribadiRequest() {
           {/* COME LATE */}
           {form.requestType === "come_late" && (
             <>
-              <label>Come Late Date:</label>
+              <label>Tanggal:</label>
               <input
                 type="date"
                 name="comeLateDate"
@@ -151,9 +144,9 @@ export default function PribadiRequest() {
                 onChange={handleChange}
               />
 
-              <label>Come Late Hour:</label>
+              <label>Jam:</label>
               <input
-                type="time"
+                type="date"
                 name="comeLateHour"
                 value={form.comeLateHour}
                 onChange={handleChange}
@@ -164,25 +157,32 @@ export default function PribadiRequest() {
           {/* TEMP LEAVE */}
           {form.requestType === "temp_leave" && (
             <>
-              <label>Temporary Leave Day Label:</label>
-              <input
-                type="text"
-                name="tempLeaveDay"
-                value={form.tempLeaveDay}
-                onChange={handleChange}
-              />
-
-              <label>Temporary Leave Date:</label>
+              <label>Tanggal:</label>
               <input
                 type="date"
-                name="tempLeaveDate"
-                value={form.tempLeaveDate}
+                name="tempLeaveStart"
+                value={form.tempLeaveStart}
+                onChange={handleChange}
+              />
+              <label>Sampai Tanggal:</label>
+              <input
+                type="date"
+                name="tempLeaveEnd"
+                value={form.tempLeaveEnd}
                 onChange={handleChange}
               />
             </>
           )}
+          {/* Alasan */}
+          <label>Alasan:</label>
+          <input
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            required
+          />
 
-          <button type="submit">Submit</button>
+          <button type="submit">Ajukan!</button>
         </form>
       </div>
     </>

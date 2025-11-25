@@ -30,7 +30,7 @@ export default function Dashboard() {
       localStorage.setItem("email", res.data.email);
     } catch (err) {
       console.log("User not logged in → redirecting to login");
-      navigate("/login");
+      navigate("/");
     }
   };
 
@@ -70,7 +70,6 @@ export default function Dashboard() {
   return (
     <div className="dash-container">
       <h1>Welcome, {user.name}</h1>
-      <h3>Role: {user.role.toUpperCase()}</h3>
 
       {/* STAFF DASHBOARD */}
       {user.role === "staff" && (

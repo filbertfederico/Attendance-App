@@ -38,8 +38,8 @@ export default function DinasRequest() {
 
       Swal.fire({
         icon: "success",
-        title: "Request Submitted",
-        text: "Your dinas permission request has been sent.",
+        title: "Izin Terkumpulkan",
+        text: "Izin dinas Anda telah diajukan.",
         timer: 1500,
         showConfirmButton: false,
       });
@@ -56,8 +56,8 @@ export default function DinasRequest() {
       console.error(err);
       Swal.fire({
         icon: "error",
-        title: "Submission Failed",
-        text: "Please try again.",
+        title: "Gagal Mengirim Izin",
+        text: "Coba lagi.",
       });
     }
   }
@@ -66,7 +66,7 @@ export default function DinasRequest() {
     <>
       <Navbar />
       <div className="form-container">
-        <h2>Request Izin Dinas</h2>
+        <h2>SURAT PERINTAH PERJALANAN DINAS</h2>
 
         <form onSubmit={handleSubmit}>
           <p><b>Name:</b> {userName}</p>
@@ -87,7 +87,7 @@ export default function DinasRequest() {
             required
           />
 
-          <label>Jam Mulai:</label>
+          <label>Berangkat:</label>
           <input
             type="datetime-local"
             name="timeStart"
@@ -96,7 +96,7 @@ export default function DinasRequest() {
             required
           />
 
-          <label>Jam Selesai:</label>
+          <label>Selesai:</label>
           <input
             type="datetime-local"
             name="timeEnd"
@@ -105,13 +105,13 @@ export default function DinasRequest() {
             required
           />
 
-          <label>Status:</label>
+          <label>Status:(Pilih salah satu)</label>
           <select name="status" value={form.status} onChange={handleChange}>
             <option value="return">Kembali ke Kantor</option>
             <option value="not return">Tidak Kembali ke Kantor</option>
           </select>
 
-          <button type="submit">Submit</button>
+          <button type="submit">Ajukan!</button>
         </form>
       </div>
     </>

@@ -8,7 +8,7 @@ import "../styles/request.css";
 function getDayLabel(dateStr) {
   if (!dateStr) return "";
   const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", { weekday: "long" });
+  return date.toLocaleDateString("ID", { weekday: "long" });
 }
 
 function formatDate(dateStr) {
@@ -23,10 +23,7 @@ function formatTime(timeStr) {
 
 export default function RequestList() {
   // REAL user (from login)
-  const user = {
-    name: localStorage.getItem("name"),
-    role: localStorage.getItem("role"),
-  };
+  console.log("TOKEN USED:", localStorage.getItem("token"));
 
   const [dinasList, setDinasList] = useState([]);
   const [pribadiList, setPribadiList] = useState([]);
@@ -56,53 +53,53 @@ export default function RequestList() {
     <>
       <Navbar />
       <div className="page-container">
-        <h2>All My Requests</h2>
+        <h2>Semua Izin</h2>
 
         <div className="card-list">
 
           {/* ---------- DINAS REQUESTS ---------- */}
           {dinasList.map((d) => (
             <div className="card" key={`d-${d.id}`}>
-              <h3>Dinas Request</h3>
+              <h3>Form Dinas</h3>
 
-              <p><b>Name:</b> {d.name}</p>
-              <p><b>Division:</b> {d.division}</p>
-              <p><b>Purpose:</b> {d.purpose}</p>
-              <p><b>Time:</b> {d.time_start} → {d.time_end}</p>
+              <p><b>Nama:</b> {d.name}</p>
+              <p><b>Divisi:</b> {d.division}</p>
+              <p><b>Tujuan:</b> {d.purpose}</p>
+              <p><b>Waktu:</b> {d.time_start} → {d.time_end}</p>
               <p><b>Status:</b> {d.status}</p>
-              <p><b>Approval Status:</b> {d.approval_status}</p>
-              <p><b>Submitted At:</b> {d.created_at}</p>
+              <p><b>Status Persetujuan:</b> {d.approval_status}</p>
+              <p><b>Dikumpulkan pada At:</b> {d.created_at}</p> 
             </div>
           ))}
 
           {/* ---------- PRIVATE REQUESTS ---------- */}
           {pribadiList.map((p) => (
             <div className="card" key={`p-${p.id}`}>
-              <h3>Private Request</h3>
+              <h3>Form Izin</h3>
 
-              <p><b>Name:</b> {p.name}</p>
-              <p><b>Type:</b> {p.request_type}</p>
-              <p><b>Status:</b> {p.approval_status}</p>
-
-              <p><b>Details:</b>{" "}
+              <p><b>Nama:</b> {p.name}</p>
+              <p><b>Jabatan:</b> {p.division}</p>
+              <p><b>Perincian:</b>{" "}
 
                 {p.request_type === "time_off" && (
-                  <>Day Off: {formatDate(p.date)}</>
+                  <>Tidak masuk kerja pada hari & tanggal: {formatDate(p.date)}</>
                 )}
 
                 {p.request_type === "leave_early" && (
-                  <>Leave Early: {formatTime(p.short_hour)}</>
+                  <>Pulang lebih awal pada pukul: {formatTime(p.short_hour)}</>
                 )}
 
                 {p.request_type === "come_late" && (
-                  <>Come Late: {formatDate(p.come_late_date)} at {formatTime(p.come_late_hour)}</>
+                  <>Datang terlambat pada: {formatDate(p.come_late_date)} ,pukul: {formatTime(p.come_late_hour)}</>
                 )}
 
                 {p.request_type === "temp_leave" && (
-                  <>Temporary Leave: {formatDate(p.temp_leave_date)}</>
+                  <>Meninggalkan pekeerjaan sementara: {formatDate(p.temp_leave_date)}</>
                 )}
 
               </p>
+              <p><b>Alasan: </b>{p.title}</p>
+              <p><b>Status:</b> {p.approval_status}</p>
             </div>
           ))}
         </div>

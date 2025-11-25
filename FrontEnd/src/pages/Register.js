@@ -16,7 +16,7 @@ export default function Register() {
     e.preventDefault();
     try {
       await api.post("/auth/register", form);
-      navigate("/login");
+      navigate("/");
     } catch (err) {
       setError("Email already used");
     }
