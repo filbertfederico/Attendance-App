@@ -12,7 +12,7 @@ class User(Base):
 
 
 class DinasDalamKota(Base):
-    __tablename__ = "dinas-dalam-kota"
+    __tablename__ = "dinasDalamKota"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)

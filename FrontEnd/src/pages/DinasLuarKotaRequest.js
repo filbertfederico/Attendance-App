@@ -34,7 +34,7 @@ export default function DinasRequest() {
         status: form.status,
       };
 
-      await api.post("/dinas/", payload);
+      await api.post("/dinasLuarKota/", payload);
 
       Swal.fire({
         icon: "success",

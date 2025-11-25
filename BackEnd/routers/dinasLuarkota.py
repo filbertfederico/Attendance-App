@@ -1,4 +1,4 @@
-# routers/dinas_luar_kota.py
+# routers/dinasLuarKota.py
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
