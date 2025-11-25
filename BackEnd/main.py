@@ -6,10 +6,16 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 
+from starlette.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi import Request, HTTPException
+
 from BackEnd.database import Base, engine
 from BackEnd.routers.auth import router as auth_router
 from BackEnd.routers.pribadi import router as pribadi_router
-from BackEnd.routers.dinasDalamKota import router as dinas_router
+from BackEnd.routers.dinasDalamKota import router as dinasDalamKota_router
+from BackEnd.routers.dinasLuarkota import router as dinasLuarkota_router
 
 
 app = FastAPI()
@@ -40,6 +46,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.exception_handler(HTTPException)
+async def cors_http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers={"Access-Control-Allow-Origin": "*"},
+    )
+
+@app.exception_handler(RequestValidationError)
+async def cors_validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+        headers={"Access-Control-Allow-Origin": "*"},
+    )
+
 # -----------------------------
 # ROOT ROUTE
 # -----------------------------
@@ -53,7 +75,8 @@ def home():
 # -----------------------------
 app.include_router(auth_router, prefix="/auth")
 app.include_router(pribadi_router, prefix="/private")
-app.include_router(dinas_router, prefix="/dinas")
+app.include_router(dinasDalamKota_router, prefix="/dinasDalamKota")
+app.include_router(dinasLuarkota_router, prefix="/dinasLuarkota")
 
 
 # -----------------------------

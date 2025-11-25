@@ -76,8 +76,8 @@ async def create_private(
         come_late_date=parse_date(data.comeLateDate),
         come_late_hour=parse_time(data.comeLateHour),
 
-        temp_leave_day=(data.tempLeaveDay),
-        temp_leave_date=parse_date(data.tempLeaveDate),
+        temp_leave_start=parse_date(data.tempLeaveStart),
+        temp_leave_end=parse_date(data.tempLeaveEnd),
 
         approval_status="pending"
     )
@@ -91,16 +91,14 @@ async def create_private(
 
 # ---------------------------
 # STAFF: GET MY REQUESTS
+# /GET
 # ---------------------------
 @router.get("/my")
 async def get_my_private(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-
-    # Filter by name (your table uses names)
     user_name = current_user.name
-
     result = db.query(Pribadi).filter(Pribadi.name == user_name).all()
     return result
 
@@ -113,7 +111,6 @@ async def get_all_private(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-
     if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
 
@@ -129,7 +126,6 @@ async def approve_private(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-
     if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
 
@@ -138,7 +134,7 @@ async def approve_private(
         raise HTTPException(404, "Request not found")
 
     req.approval_status = "approved"
-    req.approved_by = current_user.name  # FIX
+    req.approved_by = current_user.name
     db.commit()
 
     return {"message": "approved"}
@@ -153,7 +149,6 @@ async def deny_private(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-
     if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
 
@@ -162,7 +157,7 @@ async def deny_private(
         raise HTTPException(404, "Request not found")
 
     req.approval_status = "denied"
-    req.approved_by = current_user.name  # FIX
+    req.approved_by = current_user.name
     db.commit()
 
     return {"message": "denied"}
