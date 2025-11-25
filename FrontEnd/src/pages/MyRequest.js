@@ -23,24 +23,24 @@ function formatTime(timeStr) {
 
 export default function RequestList() {
   // REAL user (from login)
-  console.log("TOKEN USED:", localStorage.getItem("token"));
+  // console.log("TOKEN USED:", localStorage.getItem("token"));
 
-  const [dinasList, setDinasList] = useState([]);
+  const [dinasDalamKotaList, setDinasDalamKotaList] = useState([]);
   const [pribadiList, setPribadiList] = useState([]);
 
   async function loadData() {
     try {
-      const dinas = await api.get("/dinas/my");
+      const dinasDalamKota = await api.get("/dinasDalamKota/my");
       const pribadi = await api.get("/private/my");
 
-      console.log("Dinas Response:", dinas.data);
+      console.log("DinasDalamdinasDalamKota Response:", dinasDalamKota.data);
       console.log("Pribadi Response:", pribadi.data);
 
-      setDinasList(Array.isArray(dinas.data) ? dinas.data : []);
+      setDinasDalamKotaList(Array.isArray(dinasDalamKota.data) ? dinasDalamKota.data : []);
       setPribadiList(Array.isArray(pribadi.data) ? pribadi.data : []);
     } catch (err) {
       console.error("Error loading request data:", err);
-      setDinasList([]);
+      setDinasDalamKotaList([]);
       setPribadiList([]);
     }
   }
@@ -57,10 +57,10 @@ export default function RequestList() {
 
         <div className="card-list">
 
-          {/* ---------- DINAS REQUESTS ---------- */}
-          {dinasList.map((d) => (
+          {/* ---------- DINASDalamKota REQUESTS ---------- */}
+          {dinasDalamKotaList.map((d) => (
             <div className="card" key={`d-${d.id}`}>
-              <h3>Form Dinas</h3>
+              <h3>Form DinasDalamdinasDalamKota</h3>
 
               <p><b>Nama:</b> {d.name}</p>
               <p><b>Divisi:</b> {d.division}</p>

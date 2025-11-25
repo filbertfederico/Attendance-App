@@ -1,4 +1,4 @@
-# routers/dinas_dalam_kota.py
+# routers/dinasdalamkota.py
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -31,7 +31,7 @@ class DinasDalamKotaRequest(BaseModel):
 # POST /dinasDalamKota/
 # ---------------------
 @router.post("/")
-async def create_dinas_dalam_kota(
+async def create_DinasDalamKota(
     data: DinasDalamKotaRequest,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -64,7 +64,7 @@ async def create_dinas_dalam_kota(
 # GET /dinasDalamKota/my
 # ---------------------
 @router.get("/my")
-async def get_my_dinas_dalam_kota(
+async def get_my_DinasDalamKota(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -78,7 +78,7 @@ async def get_my_dinas_dalam_kota(
 # GET /dinasDalamKota/
 # ---------------------
 @router.get("/")
-async def get_all_dinas_dalam_kota(
+async def get_all_DinasDalamKota(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -93,7 +93,7 @@ async def get_all_dinas_dalam_kota(
 # PUT /dinasDalamKota/{id}/approve
 # ---------------------
 @router.put("/{id}/approve")
-async def approve_dinas_dalam_kota(
+async def approve_DinasDalamKota(
     id: int,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -117,7 +117,7 @@ async def approve_dinas_dalam_kota(
 # PUT /dinasDalamKota/{id}/deny
 # ---------------------
 @router.put("/{id}/deny")
-async def deny_dinas_dalam_kota(
+async def deny_DinasDalamKota(
     id: int,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
