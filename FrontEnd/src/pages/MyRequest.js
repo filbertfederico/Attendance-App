@@ -22,25 +22,24 @@ function formatTime(timeStr) {
 }
 
 export default function RequestList() {
-  // REAL user (from login)
-  // console.log("TOKEN USED:", localStorage.getItem("token"));
-
   const [dinasDalamKotaList, setDinasDalamKotaList] = useState([]);
+  const [dinasLuarKotaList, setDinasLuarKotaList] = useState([]);
   const [pribadiList, setPribadiList] = useState([]);
 
   async function loadData() {
     try {
       const dinasDalamKota = await api.get("/dinasDalamKota/my");
+      const dinasLuarKota = await api.get("/dinasLuarkota/my");
       const pribadi = await api.get("/private/my");
 
-      console.log("DinasDalamdinasDalamKota Response:", dinasDalamKota.data);
-      console.log("Pribadi Response:", pribadi.data);
-
       setDinasDalamKotaList(Array.isArray(dinasDalamKota.data) ? dinasDalamKota.data : []);
+      setDinasLuarKotaList(Array.isArray(dinasLuarKota.data) ? dinasLuarKota.data : []);
       setPribadiList(Array.isArray(pribadi.data) ? pribadi.data : []);
+
     } catch (err) {
       console.error("Error loading request data:", err);
       setDinasDalamKotaList([]);
+      setDinasLuarKotaList([]);
       setPribadiList([]);
     }
   }
@@ -57,51 +56,74 @@ export default function RequestList() {
 
         <div className="card-list">
 
-          {/* ---------- DINASDalamKota REQUESTS ---------- */}
+          {/* ---------- DINAS DALAM KOTA ---------- */}
           {dinasDalamKotaList.map((d) => (
-            <div className="card" key={`d-${d.id}`}>
-              <h3>Form DinasDalamdinasDalamKota</h3>
+            <div className="card" key={`dk-${d.id}`}>
+              <h3>Form Dinas Dalam Kota</h3>
 
               <p><b>Nama:</b> {d.name}</p>
               <p><b>Divisi:</b> {d.division}</p>
               <p><b>Tujuan:</b> {d.purpose}</p>
               <p><b>Waktu:</b> {d.time_start} → {d.time_end}</p>
-              <p><b>Status:</b> {d.status}</p>
+              <p><b>Status Form:</b> {d.status}</p>
               <p><b>Status Persetujuan:</b> {d.approval_status}</p>
-              <p><b>Dikumpulkan pada At:</b> {d.created_at}</p> 
+              <p><b>Dikumpulkan pada:</b> {d.created_at}</p>
             </div>
           ))}
 
-          {/* ---------- PRIVATE REQUESTS ---------- */}
+          {/* ---------- DINAS LUAR KOTA ---------- */}
+          {dinasLuarKotaList.map((d) => (
+            <div className="card" key={`dlk-${d.id}`}>
+              <h3>Form Dinas Luar Kota</h3>
+
+              <p><b>Nama:</b> {d.name}</p>
+              <p><b>Departemen:</b> {d.department}</p>
+              <p><b>Tujuan:</b> {d.destination}</p>
+              <p><b>Keperluan:</b> {d.purpose}</p>
+              <p><b>Kebutuhan Tambahan:</b> {d.needs || "—"}</p>
+
+              <p><b>Pengikut:</b> {d.companions || "—"}</p>
+              <p><b>Keperluan Pengikut:</b> {d.companion_purpose || "—"}</p>
+
+              <p><b>Tanggal Berangkat:</b> {formatDate(d.depart_date)}</p>
+              <p><b>Tanggal Kembali:</b> {formatDate(d.return_date)}</p>
+
+              <p><b>Jenis Angkutan:</b> {d.transport_type}</p>
+              <p><b>Barang Dibawa:</b> {d.items_brought || "—"}</p>
+
+              <p><b>Status Persetujuan:</b> {d.approval_status}</p>
+              <p><b>Dikumpulkan pada:</b> {d.created_at}</p>
+            </div>
+          ))}
+
+          {/* ---------- IZIN PRIBADI ---------- */}
           {pribadiList.map((p) => (
             <div className="card" key={`p-${p.id}`}>
               <h3>Form Izin</h3>
 
               <p><b>Nama:</b> {p.name}</p>
               <p><b>Jabatan:</b> {p.division}</p>
+
               <p><b>Perincian:</b>{" "}
-
                 {p.request_type === "time_off" && (
-                  <>Tidak masuk kerja pada hari & tanggal: {formatDate(p.date)}</>
+                  <>Tidak masuk kerja pada hari dan tanggal: {formatDate(p.date)}</>
                 )}
-
                 {p.request_type === "leave_early" && (
                   <>Pulang lebih awal pada pukul: {formatTime(p.short_hour)}</>
                 )}
-
                 {p.request_type === "come_late" && (
-                  <>Datang terlambat pada: {formatDate(p.come_late_date)} ,pukul: {formatTime(p.come_late_hour)}</>
+                  <>Datang terlambat pada: {formatDate(p.come_late_date)}, pukul: {formatTime(p.come_late_hour)}</>
                 )}
-
                 {p.request_type === "temp_leave" && (
-                  <>Meninggalkan pekeerjaan sementara: {formatDate(p.temp_leave_date)}</>
+                  <>Meninggalkan pekerjaan sementara: {formatDate(p.temp_leave_start)}</>
                 )}
-
               </p>
-              <p><b>Alasan: </b>{p.title}</p>
+
+              <p><b>Alasan:</b> {p.title}</p>
               <p><b>Status:</b> {p.approval_status}</p>
             </div>
           ))}
+
         </div>
       </div>
     </>

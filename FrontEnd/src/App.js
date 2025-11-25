@@ -13,6 +13,7 @@ import MyRequest from "./pages/MyRequest";
 
 // ADMIN PAGES
 import AdminRequestList from "./pages/admin/AdminRequest";
+import AdminDashboard from "./pages/admin/AdminDashboard"
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
 
         {/* ADMIN ROUTE */}
         <Route path="/admin/all-requests" element={<AdminRequestList />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard/>} />
 
       </Routes>
     </Router>

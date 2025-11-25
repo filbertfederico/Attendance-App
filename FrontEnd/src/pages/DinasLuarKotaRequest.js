@@ -1,19 +1,27 @@
-// FrontEnd/src/pages/DinasRequest.js
 import React, { useState } from "react";
 import { api } from "../api/api";
-import "../styles/form.css";
-import Navbar from "../components/Navbar";
 import Swal from "sweetalert2";
+import Navbar from "../components/Navbar";
 
-export default function DinasRequest() {
+export default function DinasLuarKotaRequest() {
   const userName = localStorage.getItem("name");
 
   const [form, setForm] = useState({
-    division: "",
+    name: userName,
+
+    department: "",
+    destination: "",
     purpose: "",
-    timeStart: "",
-    timeEnd: "",
-    status: "return",
+    needs: "",
+
+    companions: "",
+    companion_purpose: "",
+
+    depart_date: "",
+    return_date: "",
+
+    transport_type: "",
+    items_brought: "",
   });
 
   function handleChange(e) {
@@ -22,42 +30,35 @@ export default function DinasRequest() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    console.log("Submitting data:", form);
-
     try {
-      const payload = {
-        name: userName,
-        division: form.division,
-        purpose: form.purpose,
-        timeStart: form.timeStart,
-        timeEnd: form.timeEnd,
-        status: form.status,
-      };
-
-      await api.post("/dinasLuarKota/", payload);
+      await api.post("/dinasLuarkota/", form);
 
       Swal.fire({
         icon: "success",
-        title: "Izin Terkumpulkan",
-        text: "Izin dinas Anda telah diajukan.",
-        timer: 1500,
-        showConfirmButton: false,
+        title: "Form Terkirim",
+        text: "Pengajuan dinas luar kota berhasil diajukan.",
       });
 
       setForm({
-        division: "",
+        name: userName,
+        department: "",
+        destination: "",
         purpose: "",
-        timeStart: "",
-        timeEnd: "",
-        status: "return",
+        needs: "",
+        companions: "",
+        companion_purpose: "",
+        depart_date: "",
+        return_date: "",
+        transport_type: "",
+        items_brought: "",
       });
 
     } catch (err) {
       console.error(err);
       Swal.fire({
         icon: "error",
-        title: "Gagal Mengirim Izin",
-        text: "Coba lagi.",
+        title: "Gagal Mengirim",
+        text: "Silakan coba lagi.",
       });
     }
   }
@@ -65,53 +66,86 @@ export default function DinasRequest() {
   return (
     <>
       <Navbar />
+
       <div className="form-container">
         <h2>SURAT PERINTAH PERJALANAN DINAS</h2>
 
         <form onSubmit={handleSubmit}>
-          <p><b>Name:</b> {userName}</p>
+          <p><b>Nama:</b> {userName}</p>
 
-          <label>Divisi:</label>
-          <input
-            name="division"
-            value={form.division}
+          <label>Departemen:</label>
+          <input 
+            name="department"
+            value={form.department}
             onChange={handleChange}
             required
           />
 
           <label>Tujuan:</label>
-          <input
-            name="purpose"
-            value={form.purpose}
+          <input 
+            name="destination"
+            value={form.destination}
             onChange={handleChange}
             required
           />
 
-          <label>Berangkat:</label>
-          <input
-            type="datetime-local"
-            name="timeStart"
-            value={form.timeStart}
+          <label>Keperluan:</label>
+          <input 
+            name="needs"
+            value={form.needs}
             onChange={handleChange}
             required
           />
 
-          <label>Selesai:</label>
-          <input
-            type="datetime-local"
-            name="timeEnd"
-            value={form.timeEnd}
+          <label>Pengikut:</label>
+          <input 
+            name="companions"
+            value={form.companions}
+            onChange={handleChange}
+            placeholder="Nama Pengikut (opsional)"
+          />
+
+          <label>Keperluan Pengikut:</label>
+          <input 
+            name="companion_purpose"
+            value={form.companion_purpose}
+            onChange={handleChange}
+          />
+
+          <label>Tanggal Berangkat:</label>
+          <input 
+            type="date"
+            name="depart_date"
+            value={form.depart_date}
             onChange={handleChange}
             required
           />
 
-          <label>Status:(Pilih salah satu)</label>
-          <select name="status" value={form.status} onChange={handleChange}>
-            <option value="return">Kembali ke Kantor</option>
-            <option value="not return">Tidak Kembali ke Kantor</option>
-          </select>
+          <label>Tanggal Kembali:</label>
+          <input 
+            type="date"
+            name="return_date"
+            value={form.return_date}
+            onChange={handleChange}
+            required
+          />
 
-          <button type="submit">Ajukan!</button>
+          <label>Jenis Angkutan:</label>
+          <input 
+            name="transport_type"
+            value={form.transport_type}
+            onChange={handleChange}
+            required
+          />
+
+          <label>Barang yang Dibawa:</label>
+          <input 
+            name="items_brought"
+            value={form.items_brought}
+            onChange={handleChange}
+          />
+
+          <button type="submit">Ajukan</button>
         </form>
       </div>
     </>

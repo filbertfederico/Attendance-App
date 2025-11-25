@@ -10,7 +10,6 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     role = Column(String, default="staff")
 
-
 class DinasDalamKota(Base):
     __tablename__ = "dinasDalamKota"
 
@@ -27,9 +26,39 @@ class DinasDalamKota(Base):
     approved_by = Column(String, nullable=True)
     notes = Column(Text, nullable=True)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now)
+    
+class DinasLuarKota(Base):
+    __tablename__ = "dinasLuarKota"
 
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+
+    department = Column(String, nullable=False)
+    destination = Column(String, nullable=False)
+    purpose = Column(String, nullable=False)
+    needs = Column(String, nullable=True)
+
+    companions = Column(String, nullable=True)
+    companion_purpose = Column(String, nullable=True)
+
+    depart_date = Column(Date, nullable=False)
+    return_date = Column(Date, nullable=False)
+
+    transport_type = Column(String, nullable=False)
+    items_brought = Column(String, nullable=True)
+
+    # Approval structure
+    approval_status = Column(String, default="pending")
+    approved_by = Column(String, nullable=True)
+
+    approval_2 = Column(String, nullable=True)
+    approval_3 = Column(String, nullable=True)
+    approval_4 = Column(String, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 class Pribadi(Base):
     __tablename__ = "pribadi"

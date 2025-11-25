@@ -11,33 +11,54 @@ export default function AdminRequestList() {
 
   useEffect(() => {
     const role = localStorage.getItem("role");
-    if (role !== "admin"){
+    if (role !== "admin") {
       navigate("/home");
     }
   }, []);
 
   async function load() {
-    const dinas = await api.get("/dinas/");
-    const pribadi = await api.get("/private/");
+    const dalam = await api.get("/dinasDalamKota/");
+    const luar = await api.get("/dinasLuarkota/");
+    const pribadi = await api.get("/private/all");
 
     const list = [
-      ...dinas.data.map((d) => ({
+
+      // ====== DINAS DALAM KOTA =======
+      ...dalam.data.map((d) => ({
+        formType: "Dinas Dalam Kota",
         rawId: d.id,
-        id: `D-${d.id}`,
-        type: "dinas",
+        id: `DDK-${d.id}`,
+        category: "dalam",
         name: d.name,
         detail1: `Division: ${d.division}`,
         detail2: `Purpose: ${d.purpose}`,
         detail3: `Time: ${d.time_start} → ${d.time_end}`,
         status: d.approval_status,
-        created_at: d.created_at
+        created_at: d.created_at,
       })),
+
+      // ====== DINAS LUAR KOTA =======
+      ...luar.data.map((d) => ({
+        formType: "Dinas Luar Kota",
+        rawId: d.id,
+        id: `DLK-${d.id}`,
+        category: "luar",
+        name: d.name,
+        detail1: `Department: ${d.department}`,
+        detail2: `Destination: ${d.destination}`,
+        detail3: `Depart: ${d.depart_date} → Return: ${d.return_date}`,
+        status: d.approval_status,
+        created_at: d.created_at,
+      })),
+
+      // ====== IZIN PRIBADI =======
       ...pribadi.data.map((p) => ({
+        formType: "Izin Pribadi",
         rawId: p.id,
         id: `P-${p.id}`,
-        type: "private",
+        category: "private",
         name: p.name,
-        detail1: `Title: ${p.title}`,
+        detail1: `Reason: ${p.title}`,
         detail2: `Type: ${p.request_type}`,
         detail3:
           p.request_type === "time_off"
@@ -46,29 +67,34 @@ export default function AdminRequestList() {
             ? `Leave Early Hour: ${p.short_hour}`
             : p.request_type === "come_late"
             ? `Come Late: ${p.come_late_date} — ${p.come_late_hour}`
-            : `Temporary Leave: ${p.temp_leave_date}`,
+            : `Temporary Leave: ${p.temp_leave_start}`,
         status: p.approval_status,
-        created_at: p.created_at
+        created_at: p.created_at,
       })),
+
     ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     setCombined(list);
   }
 
-  // Approve request
+  // APPROVE
   async function approve(item) {
-    if (item.type === "dinas") {
-      await api.put(`/dinas/${item.rawId}/approve`);
+    if (item.category === "dalam") {
+      await api.put(`/dinasDalamKota/${item.rawId}/approve`);
+    } else if (item.category === "luar") {
+      await api.put(`/dinasLuarkota/${item.rawId}/approve`);
     } else {
       await api.put(`/private/${item.rawId}/approve`);
     }
-    load(); // refresh list
+    load();
   }
 
-  // Deny request
+  // DENY
   async function deny(item) {
-    if (item.type === "dinas") {
-      await api.put(`/dinas/${item.rawId}/deny`);
+    if (item.category === "dalam") {
+      await api.put(`/dinasDalamKota/${item.rawId}/deny`);
+    } else if (item.category === "luar") {
+      await api.put(`/dinasLuarkota/${item.rawId}/deny`);
     } else {
       await api.put(`/private/${item.rawId}/deny`);
     }
@@ -88,7 +114,7 @@ export default function AdminRequestList() {
         <div className="card-list">
           {combined.map((req) => (
             <div className="card" key={req.id}>
-              <h3>{req.type === "dinas" ? "Dinas Request" : "Private Request"}</h3>
+              <h3>{req.formType}</h3>
 
               <p><b>Name:</b> {req.name}</p>
               <p>{req.detail1}</p>
@@ -97,8 +123,8 @@ export default function AdminRequestList() {
 
               <p><b>Status:</b> {req.status}</p>
 
-              {/* APPROVE / DENY BUTTONS */}
-              {req.status === "pending" && (
+              {/* Approve / Deny Buttons */}
+              {req.status === "pending" ? (
                 <div className="admin-buttons">
                   <button className="approve-btn" onClick={() => approve(req)}>
                     Approve
@@ -107,9 +133,7 @@ export default function AdminRequestList() {
                     Deny
                   </button>
                 </div>
-              )}
-
-              {req.status !== "pending" && (
+              ) : (
                 <p><i>Already {req.status}</i></p>
               )}
             </div>
