@@ -2,7 +2,10 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "https://attendance-app-vwy8.onrender.com"
+  // DEPLOY
+  // baseURL: process.env.REACT_APP_API_URL || "https://attendance-app-vwy8.onrender.com"
+  // LOCAL
+    baseURL: process.env.REACT_APP_API_URL || "http://127.0.0.1:10000/"
 });
 
 // Firebase token
@@ -13,3 +16,8 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+export async function getData(path) {
+  const res = await api.get(path);
+  return res.data
+} 

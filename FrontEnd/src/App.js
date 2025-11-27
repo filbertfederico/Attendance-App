@@ -10,6 +10,7 @@ import DinasLuarKotaRequest from "./pages/DinasLuarKotaRequest";
 import DinasSwitching from "./pages/DinasSwitching";
 import PribadiRequest from "./pages/PribadiRequest";
 import MyRequest from "./pages/MyRequest";
+import DivHeadApproval from "./pages/DivHeadApproval";
 
 // ADMIN PAGES
 import AdminRequestList from "./pages/admin/AdminRequest";
@@ -31,6 +32,7 @@ function App() {
         <Route path="/pribadi-request" element={<PribadiRequest />} />
         <Route path="/my-requests" element={<MyRequest />} />
         <Route path="/switching" element={<DinasSwitching />} />
+        <Route path="/div-head-approval" element={<DivHeadApproval/>} />
 
         {/* ADMIN ROUTE */}
         <Route path="/admin/all-requests" element={<AdminRequestList />} />

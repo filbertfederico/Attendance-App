@@ -31,8 +31,8 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    loadUser();
-  } );
+    if (!user) loadUser();
+  }, []);
 
   // -----------------------------------------
   // PREVENT RENDER UNTIL USER LOADED

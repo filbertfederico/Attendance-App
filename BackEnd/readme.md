@@ -11,5 +11,6 @@ python3 -m pip install -r requirements.txt
 run from /attendance-app:
 uvicorn BackEnd.main:app --reload
 
-url: 
-http://127.0.0.1:8000
+run deploy env:
+uvicorn BackEnd.main:app --host 0.0.0.0 --port 10000
+

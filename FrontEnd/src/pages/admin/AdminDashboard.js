@@ -17,6 +17,9 @@ export default function Dashboard() {
     pendingPribadi: 0,
   });
 
+  // -----------------------------
+  // Load logged-in admin
+  // -----------------------------
   const loadUser = async () => {
     try {
       const res = await api.get("/auth/me");
@@ -25,33 +28,51 @@ export default function Dashboard() {
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("name", res.data.name);
       localStorage.setItem("email", res.data.email);
+      localStorage.setItem("division", res.data.division);
+
+      if (res.data.role !== "admin" && res.data.division !== "ADMIN") {
+        navigate("/home");
+      }
     } catch (err) {
       console.log("User not logged in → redirecting");
       navigate("/");
     }
   };
 
+  // -----------------------------
+  // Load admin statistics
+  // -----------------------------
   const loadStats = async () => {
-    if (!user || user.role !== "admin") return;
+    if (!user || (user.role !== "admin" && user.division !== "ADMIN")) return;
 
     const dalam = (await api.get("/dinasDalamKota/")).data;
     const luar = (await api.get("/dinasLuarkota/")).data;
     const pribadi = (await api.get("/private/all")).data;
 
+    // MULTI-STEP APPROVAL FIX:
+    // pending = ANY status that is NOT final: approved or denied
+    const isPending = (status) =>
+      status !== "approved" && status !== "denied";
+
     setStats({
       totalDalam: dalam.length,
-      pendingDalam: dalam.filter(d => d.approval_status === "pending").length,
+      pendingDalam: dalam.filter(d => isPending(d.approval_status)).length,
 
       totalLuar: luar.length,
-      pendingLuar: luar.filter(d => d.approval_status === "pending").length,
+      pendingLuar: luar.filter(d => isPending(d.approval_status)).length,
 
       totalPribadi: pribadi.length,
-      pendingPribadi: pribadi.filter(p => p.approval_status === "pending").length,
+      pendingPribadi: pribadi.filter(p => isPending(p.approval_status)).length,
     });
   };
 
-  useEffect(() => loadUser(), []);
-  useEffect(() => { if (user) loadStats(); }, [user]);
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  useEffect(() => {
+    if (user) loadStats();
+  }, [user]);
 
   if (!user) return <h2>Loading...</h2>;
 
@@ -59,9 +80,10 @@ export default function Dashboard() {
     <div className="dash-container">
       <h1>Welcome, {user.name}</h1>
 
-      {user.role === "admin" && (
+      {user.role === "admin" || user.division === "ADMIN" ? (
         <>
           <h2 style={{ marginTop: "30px" }}>Admin Dashboard</h2>
+
           <div className="dash-grid">
 
             <div className="dash-card">
@@ -87,7 +109,7 @@ export default function Dashboard() {
 
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 }

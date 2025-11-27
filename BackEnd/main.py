@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 
+from BackEnd import models
+
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -25,8 +27,9 @@ app = FastAPI()
 # -----------------------------
 origins = [
     "http://localhost:3000",
+    "http://192.168.56.1:3000",
     "http://localhost:5173",
-
+    
     # Firebase Hosting
     "https://attendance-app-befe2.web.app",
     "https://attendance-app-befe2.firebaseapp.com",

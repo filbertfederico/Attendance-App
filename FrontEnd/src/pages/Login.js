@@ -28,10 +28,16 @@ export default function Login() {
       const res = await signInWithEmailAndPassword(auth, trimmedEmail, pw);
       const token = await res.user.getIdToken();
 
-      console.log("📤 TOKEN SENT TO BACKEND",{token});
+      console.log("📤 TOKEN SENT TO BACKEND");
 
       // Verify with backend
-      const meRes = await fetch("https://attendance-app-vwy8.onrender.com/auth/me", {
+      // const meRes = await fetch("https://attendance-app-vwy8.onrender.com/auth/me", {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      // });
+
+      const meRes = await fetch("http://127.0.0.1:10000/auth/me", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -49,12 +55,13 @@ export default function Login() {
       localStorage.setItem("token", token);
       localStorage.setItem("role", me.role);
       localStorage.setItem("name", me.name);
+      localStorage.setItem("division", me.division);
         
       Swal.fire({
         icon: "success",
         title: "Login Successful",
         text: `Welcome, ${me.name}!`,
-        timer: 10000,
+        timer: 1000,
         showConfirmButton: false,
       });
 

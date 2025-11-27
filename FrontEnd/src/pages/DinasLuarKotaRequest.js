@@ -9,7 +9,7 @@ export default function DinasLuarKotaRequest() {
   const [form, setForm] = useState({
     name: userName,
 
-    department: "",
+    division: "",
     destination: "",
     purpose: "",
     needs: "",
@@ -41,7 +41,7 @@ export default function DinasLuarKotaRequest() {
 
       setForm({
         name: userName,
-        department: "",
+        division: "",
         destination: "",
         purpose: "",
         needs: "",
@@ -75,8 +75,8 @@ export default function DinasLuarKotaRequest() {
 
           <label>Departemen:</label>
           <input 
-            name="department"
-            value={form.department}
+            name="division"
+            value={form.division}
             onChange={handleChange}
             required
           />
