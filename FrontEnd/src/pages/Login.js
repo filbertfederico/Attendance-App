@@ -31,17 +31,17 @@ export default function Login() {
       console.log("📤 TOKEN SENT TO BACKEND");
 
       // Verify with backend
-      // const meRes = await fetch("https://attendance-app-vwy8.onrender.com/auth/me", {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      // });
-
-      const meRes = await fetch("http://127.0.0.1:10000/auth/me", {
+      const meRes = await fetch("https://attendance-app-vwy8.onrender.com/auth/me", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      // const meRes = await fetch("http://127.0.0.1:10000/auth/me", {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //   },
+      // });
 
       if (!meRes.ok) {
         console.error("❌ BACKEND REJECTED TOKEN", await meRes.text());
