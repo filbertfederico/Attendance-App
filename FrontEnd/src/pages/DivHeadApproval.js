@@ -8,21 +8,23 @@ import Swal from "sweetalert2";
 export default function DivHeadApproval() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const division = localStorage.getItem("division");
 
+  // -----------------------------
+  // LOAD ALL REQUEST TYPES
+  // -----------------------------
   async function load() {
     try {
-      // fetch pending for this division (backend will filter by current user)
-      const privateRes = await api.get("/private/by-division");
-      const dalamRes = await api.get("/dinasDalamKota/by-division");
-      const luarRes = await api.get("/dinasLuarkota/by-division");
+      const [privateRes, dalamRes, luarRes] = await Promise.all([
+        api.get("/private/by-division"),
+        api.get("/dinasDalamKota/by-division"),
+        api.get("/dinasLuarKota/by-division")
+      ]);
 
-      // Normalize results with a type tag
       const list = [
-        privateRes.data.map((r) => ({ ...r, _type: "private" })),
-        dalamRes.data.map((r) => ({ ...r, _type: "dinasDalamKota" })),
-        luarRes.data.map((r) => ({ ...r, _type: "dinasLuarkota" })),
-      ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+        ...privateRes.data.map((r) => ({ ...r, _type: "private" })),
+        ...dalamRes.data.map((r) => ({ ...r, _type: "dinasDalamKota" })),
+        ...luarRes.data.map((r) => ({ ...r, _type: "dinasLuarKota" })),
+      ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       setRequests(list);
     } catch (err) {
@@ -37,18 +39,19 @@ export default function DivHeadApproval() {
     load();
   }, []);
 
+  // -----------------------------
+  // APPROVE / DENY HANDLER
+  // -----------------------------
   async function doAction(item, action) {
-    // action: approve / deny
     try {
-      let url = "";
-      // map action & type to endpoints
-      if (item._type === "private") {
-        url = `/private/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
-      } else if (item._type === "dinasDalamKota") {
-        url = `/dinasDalamKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
-      } else if (item._type === "dinasLuarkota") {
-        url = `/dinasLuarkota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
-      }
+      const type = item._type;
+
+      const url =
+        type === "private"
+          ? `/private/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`
+          : type === "dinasDalamKota"
+          ? `/dinasDalamKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`
+          : `/dinasLuarKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
 
       const res = await api.put(url);
 
@@ -59,6 +62,7 @@ export default function DivHeadApproval() {
         timer: 1500,
         showConfirmButton: false,
       });
+
       load();
     } catch (err) {
       console.error(err);
@@ -83,22 +87,28 @@ export default function DivHeadApproval() {
         <div className="card-list">
           {requests.map((r) => (
             <div className="card" key={`${r._type}-${r.id}`}>
-              <h3>{r._type === "private" ? "Private" : r._type === "dinasDalamKota" ? "Dinas Dalam Kota" : "Dinas Luar Kota"} Request</h3>
+              <h3>
+                {r._type === "private"
+                  ? "Private Request"
+                  : r._type === "dinasDalamKota"
+                  ? "Dinas Dalam Kota"
+                  : "Dinas Luar Kota"}
+              </h3>
+
               <p><b>Name:</b> {r.name}</p>
-              <p><b>Division/Department:</b> {r.division || r.department}</p>
+              <p><b>Division:</b> {r.division || r.department}</p>
+
               {r._type === "private" && <p><b>Reason:</b> {r.title}</p>}
-              {r._type === "dinasDalamKota" && <p><b>Purpose:</b> {r.purpose}</p>}
-              {r._type === "dinasLuarkota" && (
-                <>
-                  <p><b>Destination:</b> {r.destination}</p>
-                  <p><b>Purpose:</b> {r.purpose}</p>
-                </>
-              )}
-              <p><b>Submitted:</b> {r.created_at}</p>
+              {r._type !== "private" && <p><b>Purpose:</b> {r.purpose}</p>}
+              {r._type === "dinasLuarKota" && <p><b>Destination:</b> {r.destination}</p>}
+
+              <p><b>Submitted:</b> {new Date(r.created_at).toLocaleString()}</p>
 
               <div style={{ marginTop: 8 }}>
                 <button className="approve-btn" onClick={() => doAction(r, "approve")}>Approve</button>
-                <button className="deny-btn" onClick={() => doAction(r, "deny")} style={{ marginLeft: 8 }}>Deny</button>
+                <button className="deny-btn" onClick={() => doAction(r, "deny")} style={{ marginLeft: 8 }}>
+                  Deny
+                </button>
               </div>
             </div>
           ))}

@@ -37,12 +37,6 @@ export default function Login() {
         },
       });
 
-      // const meRes = await fetch("http://127.0.0.1:10000/auth/me", {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      // });
-
       if (!meRes.ok) {
         console.error("❌ BACKEND REJECTED TOKEN", await meRes.text());
         throw new Error("Failed to fetch user role");

@@ -26,5 +26,16 @@
         "*.local"
       ]
     }
-  ]
+  ],
+  "headers": [
+  {
+    "source": "/static/**",
+    "headers": [
+      {
+        "key": "Cache-Control",
+        "value": "no-cache"
+      }
+    ]
+  }
+]
 }

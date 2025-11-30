@@ -146,7 +146,7 @@ export default function PribadiRequest() {
 
               <label>Jam:</label>
               <input
-                type="date"
+                type="time"
                 name="comeLateHour"
                 value={form.comeLateHour}
                 onChange={handleChange}

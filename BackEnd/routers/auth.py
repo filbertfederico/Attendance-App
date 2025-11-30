@@ -79,7 +79,7 @@ def get_current_user(
             name=name,
             email=email,
             role="staff",
-            division="GENERAL"   # 🔥 default division
+            division="GENERAL"
         )
         db.add(user)
         db.commit()

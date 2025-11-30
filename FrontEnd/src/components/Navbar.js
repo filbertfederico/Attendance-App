@@ -5,19 +5,24 @@ import "../styles/navbar.css";
 
 export default function Navbar() {
   const navigate = useNavigate();
+
   const role = localStorage.getItem("role");
   const name = localStorage.getItem("name");
   const division = localStorage.getItem("division");
+
+  const isDivHead = [
+    "DIV_HEAD_FINANCE",
+    "DIV_HEAD_HRD",
+    "DIV_HEAD_HSE",
+    "DIV_HEAD_OPS",
+    "DIV_HEAD_MARKETING",
+  ].includes(division);
 
   const logout = async () => {
     const auth = getAuth();
     await signOut(auth);
 
-    localStorage.removeItem("firebaseToken");
-    localStorage.removeItem("role");
-    localStorage.removeItem("name");
-    localStorage.removeItem("email");
-
+    localStorage.clear();
     navigate("/");
   };
 
@@ -25,12 +30,13 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="nav-left" onClick={() => navigate("/dashboard")}>
         <h2 className="nav-logo">IMS</h2>
+        <h3>{role}</h3>
       </div>
 
       <div className="nav-links">
 
-        {/* STAFF LINKS */}
-        {role === "staff" && (
+        {/* STAFF */}
+        {role === "staff" && !isDivHead && (
           <>
             <a onClick={() => navigate("/home")}>Home</a>
             <a onClick={() => navigate("/switching")}>Dinas</a>
@@ -39,8 +45,8 @@ export default function Navbar() {
           </>
         )}
 
-        {/* STAFF LINKS */}
-        {division === "DIV_HEAD_FINANCE" && "DIV_HEAD_HSE" && "DIV_HEAD_HRD" && "DIV_HEAD_OPS" && "DIV_HEAD_MARKETING" && (
+        {/* DIVISION HEAD */}
+        {isDivHead && (
           <>
             <a onClick={() => navigate("/home")}>Home</a>
             <a onClick={() => navigate("/switching")}>Dinas</a>
@@ -50,7 +56,7 @@ export default function Navbar() {
           </>
         )}
 
-        {/* ADMIN LINKS */}
+        {/* ADMIN */}
         {role === "admin" && (
           <>
             <a onClick={() => navigate("/dashboard")}>Home</a>
@@ -58,11 +64,10 @@ export default function Navbar() {
           </>
         )}
 
-        {/* RIGHT SIDE: USER + LOGOUT */}
+        {/* USER + LOGOUT */}
         <span className="nav-user">{name}</span>
         <button className="nav-logout" onClick={logout}>Logout</button>
       </div>
     </nav>
   );
-} 
-
+}
