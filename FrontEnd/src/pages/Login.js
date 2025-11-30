@@ -31,7 +31,7 @@ export default function Login() {
       console.log("📤 TOKEN SENT TO BACKEND");
 
       // Verify with backend
-      const meRes = await fetch("https://attendance-app-vwy8.onrender.com/auth/me", {
+      const meRes = await fetch(`https://attendance-app-vwy8.onrender.com/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

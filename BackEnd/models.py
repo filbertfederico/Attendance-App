@@ -72,3 +72,28 @@ class Pribadi(Base):
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+class Cuti(Base):
+    __tablename__ = "cuti"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    role = Column(String)
+    division = Column(String)
+
+    cuti_type = Column(String)  # yearly / pregnancy / unpaid
+    date_start = Column(Date)
+    date_end = Column(Date)
+    duration = Column(Integer)
+
+    purpose = Column(Text)
+    address = Column(Text)
+    phone = Column(String)
+    notes = Column(Text)
+
+    leave_days = Column(Integer)
+    leave_remaining = Column(Integer)
+
+    approval_div_head = Column(String, nullable=True)  # approved / rejected / None
+    approval_hrd = Column(String, nullable=True)
+    approval_status = Column(String, default="pending")

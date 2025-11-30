@@ -1,5 +1,4 @@
-# routers/dinasDalamKota.py
-
+# BackEnd/routers/dinasDalamKota.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -13,9 +12,6 @@ from .utils import get_div_head_role
 
 router = APIRouter()
 
-# ---------------------
-# Pydantic Request Model
-# ---------------------
 class DinasDalamKotaRequest(BaseModel):
     name: str
     division: str
@@ -23,18 +19,13 @@ class DinasDalamKotaRequest(BaseModel):
     timeStart: str
     timeEnd: str
     status: str
-    
-# parser
+
 def parse_dt(value: str):
     try:
         return datetime.fromisoformat(value)
     except:
         raise
 
-# ---------------------
-# CREATE
-# POST /dinasDalamKota/
-# ---------------------
 @router.post("/")
 async def create_DinasDalamKota(
     data: DinasDalamKotaRequest,
@@ -63,59 +54,6 @@ async def create_DinasDalamKota(
 
     return {"message": "Request saved", "id": entry.id}
 
-
-# ---------------------
-# STAFF: GET MY REQUESTS
-# GET /dinasDalamKota/my
-# ---------------------
-@router.get("/my")
-async def get_my_DinasDalamKota(
-    current_user=Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    return db.query(DinasDalamKota).filter(
-        DinasDalamKota.name == current_user.name
-    ).all()
-    
-# ---------------------
-# DIV_HEAD: GET MY REQUESTS
-# ---------------------
-@router.get("/by-division")
-async def get_by_division(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    role = current_user.role
-    if role == "admin":
-        return db.query(DinasDalamKota).filter(DinasDalamKota.approval_status == "pending").all()
-    if not role.startswith("DIV_HEAD_"):
-        raise HTTPException(403, "Admin or Division head only")
-    division = role.replace("DIV_HEAD_", "")
-    return db.query(DinasDalamKota).filter(
-        DinasDalamKota.division.ilike(division),
-        DinasDalamKota.approval_status == "pending",
-        DinasDalamKota.approval_div_head.is_(None)
-    ).all()
-
-# ---------------------
-# DIV_HEAD: APPROVAL
-# PUT
-# ---------------------
-@router.put("/{id}/div-head-approve")
-def div_head_approve(id, current_user, db):
-
-    req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
-
-    if req.approval_status != "waiting_div_head":
-        raise HTTPException(400, "Already processed")
-
-    req.approval_status = "waiting_admin"
-    req.approved_by = current_user.name
-
-    db.commit()
-    return {"message": "Division head approved"}
-
-# ---------------------
-# ADMIN: GET ALL
-# GET /dinasDalamKota/
-# ---------------------
 @router.get("/")
 async def get_all_DinasDalamKota(
     current_user=Depends(get_current_user),
@@ -126,11 +64,63 @@ async def get_all_DinasDalamKota(
 
     return db.query(DinasDalamKota).all()
 
+@router.get("/my")
+async def get_my_DinasDalamKota(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return db.query(DinasDalamKota).filter(
+        DinasDalamKota.name == current_user.name
+    ).all()
+    
+@router.get("/by-division")
+def get_dinas_dalam_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    div = current_user.division
 
-# ---------------------
-# ADMIN: APPROVE
-# PUT /dinasDalamKota/{id}/approve
-# ---------------------
+    if not div.startswith("DIV_HEAD_"):
+        raise HTTPException(403, "Division head only")
+
+    user_div = div.replace("DIV_HEAD_", "")
+
+    return (
+        db.query(DinasDalamKota)
+        .filter(DinasDalamKota.division == user_div)
+        .filter(DinasDalamKota.approval_status == "pending")
+        .all()
+    )
+
+
+@router.put("/{id}/div-head-approve")
+def approve_dinas_dalam(id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
+    if not req:
+        raise HTTPException(404, "Not found")
+
+    required = get_div_head_role(req.division)
+
+    if current_user.division != required:
+        raise HTTPException(403, "Not authorized")
+
+    req.approval_status = "approved"
+    db.commit()
+    return {"message": "Request approved"}
+
+
+@router.put("/{id}/div-head-deny")
+def deny_dinas_dalam(id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
+    if not req:
+        raise HTTPException(404, "Not found")
+
+    required = get_div_head_role(req.division)
+
+    if current_user.division != required:
+        raise HTTPException(403, "Not authorized")
+
+    req.approval_status = "rejected"
+    db.commit()
+    return {"message": "Request rejected"}
+
 @router.put("/{id}/approve")
 async def approve_dinas(id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
@@ -138,10 +128,10 @@ async def approve_dinas(id: int, current_user=Depends(get_current_user), db: Ses
         raise HTTPException(404, "Request not found")
 
     div_head_role = get_div_head_role(req.division)
-    is_requester_div_head = (req.name and current_user.role == div_head_role and current_user.name == req.name)
+    is_requester_div_head = (req.name and current_user.division == div_head_role and current_user.name == req.name)
 
     # Division head approval
-    if current_user.role == div_head_role and req.approval_div_head != "approved":
+    if current_user.division == div_head_role and req.approval_div_head != "approved":
         if current_user.name == req.name:
             raise HTTPException(403, "Division head cannot self-approve; admin approval required")
         req.approval_div_head = "approved"
@@ -160,10 +150,6 @@ async def approve_dinas(id: int, current_user=Depends(get_current_user), db: Ses
 
     raise HTTPException(403, "Not authorized to approve")
 
-# ---------------------
-# ADMIN: DENY
-# PUT /dinasDalamKota/{id}/deny
-# ---------------------
 @router.put("/{id}/deny")
 async def deny_DinasDalamKota(
     id: int,
@@ -174,7 +160,7 @@ async def deny_DinasDalamKota(
     if not req:
         raise HTTPException(404, "Request not found")
 
-    if current_user.role in [get_div_head_role(req.division), "admin"]:
+    if current_user.division in {get_div_head_role(req.division), "DIV_HEAD_HRD", "DIV_HEAD_FINANCE", "admin"}:
         req.approval_status = "denied"
         req.approved_by = current_user.name
         db.commit()

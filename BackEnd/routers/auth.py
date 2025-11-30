@@ -35,11 +35,8 @@ def auth_me(
     if not user:
         raise HTTPException(404, f"User {email} not found in database")
 
-    # 🔥 Ensure division always exists
-    if not hasattr(user, "division"):
-        division = "GENERAL"
-    else:
-        division = user.division or "GENERAL"
+    # Ensure division always exists (return string)
+    division = getattr(user, "division", None) or "GENERAL"
 
     return {
         "id": user.id,
@@ -85,7 +82,7 @@ def get_current_user(
         db.commit()
         db.refresh(user)
 
-    # 🔥 Guarantee division exists
+    # Guarantee division exists
     if not getattr(user, "division", None):
         user.division = "GENERAL"
         db.commit()

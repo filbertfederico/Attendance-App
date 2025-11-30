@@ -3,33 +3,33 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 load_dotenv()
+print("CWD:", os.getcwd())
+print("ENV_DATABASE_URL:", os.getenv("DATABASE_URL"))
 
 from BackEnd.database import Base, engine
 from BackEnd.routers.auth import router as auth_router
 from BackEnd.routers.pribadi import router as pribadi_router
 from BackEnd.routers.dinasDalamKota import router as dinasDalamKota_router
-from BackEnd.routers.dinasLuarkota import router as dinasLuarkota_router
+from BackEnd.routers.dinasLuarKota import router as dinasLuarKota_router
+from BackEnd.routers.cuti import router as cuti_router
 
 app = FastAPI()
 
-# -------------------------------------------------------
-# CORS — works for LOCAL + PRODUCTION
-# -------------------------------------------------------
-
+# -----------------------------
+# CORS (correct version)
+# -----------------------------
 frontend_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://192.168.56.1:3000",
-
-    # Firebase Hosting
     "https://attendance-app-befe2.web.app",
-    "https://attendance-app-befe2.firebaseapp.com",
-
-    # Backend production host
-    REACT_APP_API_URL = os.getenv("REACT_APP_API_URL")
-    
-    
+    "https://attendance-app-befe2.firebaseapp.com"
 ]
+
+# Only add FRONTEND production URL (never backend)
+PROD_URL = os.getenv("REACT_APP_API_URL")
+if PROD_URL and "3000" in PROD_URL:
+    frontend_origins.append(PROD_URL)
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,22 +39,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# -------------------------------------------------------
-# ROOT
-# -------------------------------------------------------
 @app.get("/")
 def home():
     return {"message": "IMS Attendance API Running"}
 
-# -------------------------------------------------------
-# ROUTERS
-# -------------------------------------------------------
+# Routes
 app.include_router(auth_router, prefix="/auth")
 app.include_router(pribadi_router, prefix="/private")
 app.include_router(dinasDalamKota_router, prefix="/dinasDalamKota")
-app.include_router(dinasLuarkota_router, prefix="/dinasLuarkota")
+app.include_router(dinasLuarKota_router, prefix="/dinasLuarKota")
+app.include_router(cuti_router, prefix="/cuti")
 
-# -------------------------------------------------------
-# INIT DB
-# -------------------------------------------------------
+# Debug
+@app.get("/__debug")
+def debug():
+    return {
+        "DATABASE_URL": os.getenv("DATABASE_URL"),
+        "FRONTEND_ALLOWED": frontend_origins
+    }
+
+@app.get("/test-auth-me")
+def test_me():
+    return {"working": True}
+
 Base.metadata.create_all(bind=engine)

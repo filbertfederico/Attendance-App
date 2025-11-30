@@ -46,7 +46,7 @@ export default function Dashboard() {
     if (!user || (user.role !== "admin" && user.division !== "ADMIN")) return;
 
     const dalam = (await api.get("/dinasDalamKota/")).data;
-    const luar = (await api.get("/dinasLuarkota/")).data;
+    const luar = (await api.get("/dinasLuarKota/")).data;
     const pribadi = (await api.get("/private/all")).data;
 
     // MULTI-STEP APPROVAL FIX:

@@ -61,6 +61,11 @@ export default function Dashboard() {
               <a className="dash-btn" href="/pribadi-request">Go</a>
             </div>  
             <div className="dash-card">
+              <h3>Permohonan Cuti</h3>
+              <p>Cuti</p>
+              <a className="dash-btn" href="/cuti-request">Go</a>
+            </div> 
+            <div className="dash-card">
               <h3>Semua Izin</h3>
               <p>Lihat semua form dinas & keperluan lainnya</p>
               <a className="dash-btn" href="/my-requests">Go</a>

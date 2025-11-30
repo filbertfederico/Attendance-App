@@ -1,6 +1,6 @@
 // FrontEnd/src/App.js
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
+import ProtectedRoute from "./components/ProtectedRoute"
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 
@@ -11,6 +11,7 @@ import DinasSwitching from "./pages/DinasSwitching";
 import PribadiRequest from "./pages/PribadiRequest";
 import MyRequest from "./pages/MyRequest";
 import DivHeadApproval from "./pages/DivHeadApproval";
+import CutiRequest from "./pages/CutiRequest";
 
 // ADMIN PAGES
 import AdminRequestList from "./pages/admin/AdminRequest";
@@ -33,6 +34,8 @@ function App() {
         <Route path="/my-requests" element={<MyRequest />} />
         <Route path="/switching" element={<DinasSwitching />} />
         <Route path="/div-head-approval" element={<DivHeadApproval/>} />
+        <Route path="/cuti-request" element={<CutiRequest />}/>
+
 
         {/* ADMIN ROUTE */}
         <Route path="/admin/all-requests" element={<AdminRequestList />} />

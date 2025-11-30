@@ -1,4 +1,3 @@
-// FrontEnd/src/pages/DivHeadApproval.js
 import React, { useEffect, useState } from "react";
 import { api } from "../api/api";
 import Navbar from "../components/Navbar";
@@ -9,16 +8,11 @@ export default function DivHeadApproval() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // -----------------------------
-  // LOAD ALL REQUEST TYPES
-  // -----------------------------
   async function load() {
     try {
-      const [privateRes, dalamRes, luarRes] = await Promise.all([
-        api.get("/private/by-division"),
-        api.get("/dinasDalamKota/by-division"),
-        api.get("/dinasLuarKota/by-division")
-      ]);
+      const privateRes = await api.get("/private/by-division");
+      const dalamRes = await api.get("/dinasDalamKota/by-division");
+      const luarRes = await api.get("/dinasLuarKota/by-division");
 
       const list = [
         ...privateRes.data.map((r) => ({ ...r, _type: "private" })),
@@ -28,7 +22,7 @@ export default function DivHeadApproval() {
 
       setRequests(list);
     } catch (err) {
-      console.error("Failed to load approvals", err);
+      console.error("Failed to load:", err);
       setRequests([]);
     } finally {
       setLoading(false);
@@ -44,14 +38,15 @@ export default function DivHeadApproval() {
   // -----------------------------
   async function doAction(item, action) {
     try {
-      const type = item._type;
+      let url = "";
 
-      const url =
-        type === "private"
-          ? `/private/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`
-          : type === "dinasDalamKota"
-          ? `/dinasDalamKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`
-          : `/dinasLuarKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
+      if (item._type === "private") {
+        url = `/private/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
+      } else if (item._type === "dinasDalamKota") {
+        url = `/dinasDalamKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
+      } else if (item._type === "dinasLuarKota") {
+        url = `/dinasLuarKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
+      }
 
       const res = await api.put(url);
 
@@ -65,16 +60,15 @@ export default function DivHeadApproval() {
 
       load();
     } catch (err) {
-      console.error(err);
       Swal.fire({
         icon: "error",
-        title: "Action failed",
+        title: "Action Failed",
         text: err.response?.data?.detail || "Try again",
       });
     }
   }
 
-  if (loading) return <h2>Loading approvals...</h2>;
+  if (loading) return <h2>Loading...</h2>;
 
   return (
     <>
@@ -82,7 +76,7 @@ export default function DivHeadApproval() {
       <div className="page-container">
         <h2>Division Head Approvals</h2>
 
-        {requests.length === 0 && <p>No pending requests for your division.</p>}
+        {requests.length === 0 && <p>No pending requests.</p>}
 
         <div className="card-list">
           {requests.map((r) => (
@@ -99,12 +93,17 @@ export default function DivHeadApproval() {
               <p><b>Division:</b> {r.division || r.department}</p>
 
               {r._type === "private" && <p><b>Reason:</b> {r.title}</p>}
-              {r._type !== "private" && <p><b>Purpose:</b> {r.purpose}</p>}
-              {r._type === "dinasLuarKota" && <p><b>Destination:</b> {r.destination}</p>}
+              {r._type === "dinasDalamKota" && <p><b>Purpose:</b> {r.purpose}</p>}
+              {r._type === "dinasLuarKota" && (
+                <>
+                  <p><b>Destination:</b> {r.destination}</p>
+                  <p><b>Purpose:</b> {r.purpose}</p>
+                </>
+              )}
 
-              <p><b>Submitted:</b> {new Date(r.created_at).toLocaleString()}</p>
+              <p><b>Status:</b> {r.approval_status}</p>
 
-              <div style={{ marginTop: 8 }}>
+              <div style={{ marginTop: 10 }}>
                 <button className="approve-btn" onClick={() => doAction(r, "approve")}>Approve</button>
                 <button className="deny-btn" onClick={() => doAction(r, "deny")} style={{ marginLeft: 8 }}>
                   Deny

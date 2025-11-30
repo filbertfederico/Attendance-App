@@ -1,78 +1,32 @@
-// FrontEnd\src\components\ProtectedRoute.js
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from "react";
+import { Navigate } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+export default function ProtectedRoute({ role, children }) {
+  // YOUR actual Firebase token name
+  const token = localStorage.getItem("firebaseToken");
 
-// STAFF PAGES
-import DinasRequest from "./pages/DinasRequest";
-import PribadiRequest from "./pages/PribadiRequest";
-import MyRequest from "./pages/MyRequest";
+  const userRole = localStorage.getItem("role");       // "staff" or "admin"
+  const division = localStorage.getItem("division");   // "DIV_HEAD_OPS", "OPS"
 
-// ADMIN PAGES
-import AdminRequestList from "./pages/admin/AdminRequest";
-import ProtectedRoute from "./components/ProtectedRoute";
+  const isDivHead = division?.startsWith("DIV_HEAD_");
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        {/* PUBLIC */}
-        <Route path="/" element={<Login />} />
+  // Not logged in -> send to login
+  if (!token) return <Navigate to="/" />;
 
-        {/* STAFF + ADMIN */}
-        <Route
-          path="/home"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+  // staff-only routes:
+  if (role === "staff" && userRole !== "staff") {
+    return <Navigate to="/" />;
+  }
 
-        {/* STAFF ONLY */}
-        <Route
-          path="/dinas-request"
-          element={
-            <ProtectedRoute role="staff">
-              <DinasRequest />
-            </ProtectedRoute>
-          }
-        />
+  // admin-only routes:
+  if (role === "admin" && userRole !== "admin") {
+    return <Navigate to="/" />;
+  }
 
-        <Route
-          path="/pribadi-request"
-          element={
-            <ProtectedRoute role="staff">
-              <PribadiRequest />
-            </ProtectedRoute>
-          }
-        />
+  // division head-only routes:
+  if (role === "div_head" && !isDivHead) {
+    return <Navigate to="/" />;
+  }
 
-        <Route
-          path="/my-requests"
-          element={
-            <ProtectedRoute role="staff">
-              <MyRequest />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ADMIN ONLY */}
-        <Route
-          path="/admin/all-requests"
-          element={
-            <ProtectedRoute role="admin">
-              <AdminRequestList />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Unauthorized Page */}
-        <Route path="*" element={<h1>Unauthorized</h1>} />
-      </Routes>
-    </Router>
-  );
+  return children;
 }
-
-export default App;

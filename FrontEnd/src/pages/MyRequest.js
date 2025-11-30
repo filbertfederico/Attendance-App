@@ -65,6 +65,7 @@ export default function MyRequest() {
   const [dinasDalamKotaList, setDinasDalamKotaList] = useState([]);
   const [dinasLuarKotaList, setDinasLuarKotaList] = useState([]);
   const [pribadiList, setPribadiList] = useState([]);
+  const [cutiList, setCutiList] = useState([]);
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -73,12 +74,14 @@ export default function MyRequest() {
   async function loadData() {
     try {
       const dk = await api.get("/dinasDalamKota/my");
-      const dlk = await api.get("/dinasLuarkota/my");
+      const dlk = await api.get("/dinasLuarKota/my");
       const pribadi = await api.get("/private/my");
+      const cuti = await api.get("/cuti/my")
 
       setDinasDalamKotaList(dk.data || []);
       setDinasLuarKotaList(dlk.data || []);
       setPribadiList(pribadi.data || []);
+      setCutiList(cuti.data)
     } catch (err) {
       console.error("Error loading request data:", err);
     }
@@ -311,6 +314,63 @@ export default function MyRequest() {
                 </button>
               </div>
             ))}
+          
+          {/* ---------------- CUTI REQUESTS ---------------- */}
+            {cutiList
+            .filter((c) => matchFilters(c, "cuti"))
+            .map((c) => (
+              <div className="request-card" key={`cuti-${c.id}`} id={`card-${c.id}`}>
+              
+                <div className="card-header-container">
+                  <img src={IMS_logo} className="card-logo" alt="logo" />
+            
+                  <div className="card-header">
+                    <h3>FORM CUTI</h3>
+                  </div>
+            
+                  <div className="card-header-spacer"></div>
+                </div>
+            
+                <div className="request-table">
+                  <b>Nama</b> <span>{c.name}</span>
+                  <b>Divisi</b> <span>{c.division}</span>
+                  <b>Jenis Cuti</b> <span>{c.cuti_type}</span>
+                  <b>Mulai</b> <span>{c.date_start}</span>
+                  <b>Selesai</b> <span>{c.date_end}</span>
+                  <b>Durasi</b> <span>{c.duration_days} hari</span>
+                  <b>Keperluan</b> <span>{c.purpose}</span>
+                  <b>Alamat</b> <span>{c.address}</span>
+                  <b>No. Telp</b> <span>{c.phone}</span>
+                  <b>Catatan</b> <span>{c.notes}</span>
+            
+                  <b>Cuti Tersisa</b> <span>{c.leave_days ?? "-"}</span>
+                  <b>Cuti Setelah</b> <span>{c.remainder_leave_days ?? "-"}</span>
+            
+                  <b>Dikumpulkan</b>
+                  <span>{formatReadableDateTime(c.created_at)}</span>
+                </div>
+            
+                <div
+                  className={`approval-status ${
+                    c.approval_status === "approved"
+                      ? "status-approved"
+                      : c.approval_status === "rejected"
+                      ? "status-rejected"
+                      : "status-pending"
+                  }`}
+                >
+                  Status: {c.approval_status}
+                </div>
+                
+                <button
+                  onClick={() => exportPDF(`card-${c.id}`, `Cuti_${c.id}`)}
+                  className="pdf-btn"
+                >
+                  Download PDF
+                </button>
+              </div>
+            ))}
+
         </div>
       </div>
     </>

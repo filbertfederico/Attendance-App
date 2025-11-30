@@ -31,7 +31,7 @@ export default function DinasLuarKotaRequest() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      await api.post("/dinasLuarkota/", form);
+      await api.post("/dinasLuarKota/", form);
 
       Swal.fire({
         icon: "success",

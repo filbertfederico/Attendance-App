@@ -18,7 +18,7 @@ export default function AdminRequestList() {
 
   async function load() {
     const dalam = await api.get("/dinasDalamKota/");
-    const luar = await api.get("/dinasLuarkota/");
+    const luar = await api.get("/dinasLuarKota/");
     const pribadi = await api.get("/private/all");
 
     const list = [
@@ -82,7 +82,7 @@ export default function AdminRequestList() {
     if (item.category === "dalam") {
       await api.put(`/dinasDalamKota/${item.rawId}/approve`);
     } else if (item.category === "luar") {
-      await api.put(`/dinasLuarkota/${item.rawId}/approve`);
+      await api.put(`/dinasLuarKota/${item.rawId}/approve`);
     } else {
       await api.put(`/private/${item.rawId}/approve`);
     }
@@ -94,7 +94,7 @@ export default function AdminRequestList() {
     if (item.category === "dalam") {
       await api.put(`/dinasDalamKota/${item.rawId}/deny`);
     } else if (item.category === "luar") {
-      await api.put(`/dinasLuarkota/${item.rawId}/deny`);
+      await api.put(`/dinasLuarKota/${item.rawId}/deny`);
     } else {
       await api.put(`/private/${item.rawId}/deny`);
     }

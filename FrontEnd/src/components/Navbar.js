@@ -42,6 +42,7 @@ export default function Navbar() {
             <a onClick={() => navigate("/switching")}>Dinas</a>
             <a onClick={() => navigate("/pribadi-request")}>Izin</a>
             <a onClick={() => navigate("/my-requests")}>Semua Form</a>
+            <a onClick={() => navigate("/cuti-request")}>Cuti</a>
           </>
         )}
 
@@ -51,6 +52,7 @@ export default function Navbar() {
             <a onClick={() => navigate("/home")}>Home</a>
             <a onClick={() => navigate("/switching")}>Dinas</a>
             <a onClick={() => navigate("/pribadi-request")}>Izin</a>
+            <a onClick={() => navigate("/cuti-request")}>Cuti</a>
             <a onClick={() => navigate("/div-head-approval")}>Form Staff</a>
             <a onClick={() => navigate("/my-requests")}>Semua Form</a>
           </>
