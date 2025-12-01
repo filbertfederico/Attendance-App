@@ -4,8 +4,8 @@ import { linkWithCredential } from "firebase/auth";
 
 export const api = axios.create({
   // DEPLOY
-  baseURL: process.env.REACT_APP_API_URL,
-  WithCredential:true
+  baseURL: process.env.REACT_APP_API_URL || "https://attendance-app-vwy8.onrender.com",
+  withCredentials: true
 });
 
 // Firebase token

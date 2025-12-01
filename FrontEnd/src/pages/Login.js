@@ -33,8 +33,9 @@ export default function Login() {
       // Verify with backend
       const meRes = await fetch(`https://attendance-app-vwy8.onrender.com/auth/me`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
+        credentials: "include"
       });
 
       if (!meRes.ok) {

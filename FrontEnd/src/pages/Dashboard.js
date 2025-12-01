@@ -13,15 +13,22 @@ export default function Dashboard() {
   // LOAD REAL USER FROM BACKEND
   // -----------------------------------------
   const loadUser = async () => {
+  const token = localStorage.getItem("token");
+    
+    if (!token) {
+      console.log("No token → redirecting to login");
+      navigate("/");
+      return;
+    }
+  
     try {
       const res = await api.get("/auth/me");
-
+    
       setUser(res.data);
-      // Cache user info
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("name", res.data.name);
       localStorage.setItem("email", res.data.email);
-
+    
     } catch (err) {
       console.log("User not logged in → redirecting to login");
       navigate("/");
