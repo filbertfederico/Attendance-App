@@ -23,11 +23,6 @@ frontend_origins = [
     "https://attendance-app-befe2.firebaseapp.com"
 ]
 
-# Only add FRONTEND production URL (never backend)
-PROD_URL = os.getenv("REACT_APP_API_URL")
-if PROD_URL and "3000" in PROD_URL:
-    frontend_origins.append(PROD_URL)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=frontend_origins,
