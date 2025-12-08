@@ -1,24 +1,49 @@
 // FrontEnd/src/components/ProtectedRoute.js
-import React from "react";
+
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { api } from "../api/api";
 
-export default function ProtectedRoute({ role, children }) {
-  // YOUR actual Firebase token name
-  const token = localStorage.getItem("firebaseToken");
+export default function ProtectedRoute({ allowedRoles, children }) {
+  const [loading, setLoading] = useState(true);
+  const [allowed, setAllowed] = useState(false);
 
-  const userRole = localStorage.getItem("role");       // "staff" or "admin"
+  useEffect(() => {
+    const check = async () => {
+      const token = localStorage.getItem("token");
 
-  // Not logged in
-  if (!token) return <Navigate to="/" />;
-  
-  // staff-only
-  if (role === "staff" && userRole !== "staff") return <Navigate to="/home" />;
-  
-  // admin-only
-  if (role === "admin" && userRole !== "admin") return <Navigate to="/home" />;
-  
-  // division head-only
-  if (role === "div_head" && userRole !== "div_head") return <Navigate to="/home" />;
+      if (!token) {
+        setAllowed(false);
+        setLoading(false);
+        return;
+      }
 
-  return children;
+      try {
+        const res = await api.get("/auth/me");
+        const me = res.data;
+
+        // Update localStorage
+        localStorage.setItem("role", me.role);
+        localStorage.setItem("division", me.division);
+        localStorage.setItem("name", me.name);
+
+        if (!allowedRoles || allowedRoles.includes(me.role)) {
+          setAllowed(true);
+        } else {
+          setAllowed(false);
+        }
+      } catch (e) {
+        console.error("ProtectedRoute error:", e);
+        setAllowed(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    check();
+  }, [allowedRoles]);
+
+  if (loading) return <div>Loading...</div>;
+
+  return allowed ? children : <Navigate to="/home" replace />;
 }

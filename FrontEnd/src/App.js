@@ -1,6 +1,6 @@
 // FrontEnd/src/App.js
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import ProtectedRoute from "./components/ProtectedRoute"
+import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 
@@ -21,26 +21,71 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* login */}
+
+        {/* LOGIN */}
         <Route path="/" element={<Login />} />
 
         {/* HOME */}
         <Route path="/home" element={<Dashboard />} />
 
-        {/* STAFF ROUTES */}
-        <Route path="/dinas-dalam-kota-request" element={<DinasDalamKotaRequest />} />
-        <Route path="/dinas-luar-kota-request" element={<DinasLuarKotaRequest />} />        
-        <Route path="/pribadi-request" element={<PribadiRequest />} />
-        <Route path="/my-requests" element={<MyRequest />} />
-        <Route path="/switching" element={<DinasSwitching />} />
-        <Route path="/cuti-request" element={<CutiRequest />}/>
+        {/* STAFF ROUTES (no restriction needed, login required only) */}
+        <Route path="/dinas-dalam-kota-request" element={
+          <ProtectedRoute allowedRoles={["staff", "div_head", "admin"]}>
+            <DinasDalamKotaRequest />
+          </ProtectedRoute>
+        }/>
 
-        {/* DIV_HEAD */}
-        <Route path="/div-head-approval" element={<ProtectedRoute role={"div_head"}><DivHeadApproval/></ProtectedRoute>} />
+        <Route path="/dinas-luar-kota-request" element={
+          <ProtectedRoute allowedRoles={["staff", "div_head", "admin"]}>
+            <DinasLuarKotaRequest />
+          </ProtectedRoute>
+        }/>
 
-        {/* ADMIN ROUTE */}
-        <Route path="/admin/all-requests" element={<ProtectedRoute role={"admin"}><AdminRequest /></ProtectedRoute>} />
-        <Route path="/admin/dashboard" element={<ProtectedRoute role={"admin"}><AdminDashboard/></ProtectedRoute>} />
+        <Route path="/pribadi-request" element={
+          <ProtectedRoute allowedRoles={["staff", "div_head", "admin"]}>
+            <PribadiRequest />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/my-requests" element={
+          <ProtectedRoute allowedRoles={["staff", "div_head", "admin"]}>
+            <MyRequest />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/switching" element={
+          <ProtectedRoute allowedRoles={["staff", "div_head", "admin"]}>
+            <DinasSwitching />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/cuti-request" element={
+          <ProtectedRoute allowedRoles={["staff", "div_head", "admin"]}>
+            <CutiRequest />
+          </ProtectedRoute>
+        }/>
+
+        {/* DIV HEAD ROUTE */}
+        <Route path="/div-head-approval"
+          element={
+            <ProtectedRoute allowedRoles={["div_head"]}>
+                <DivHeadApproval />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ADMIN ROUTES */}
+        <Route path="/admin/all-requests" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminRequest />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/admin/dashboard" element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }/>
 
       </Routes>
     </Router>

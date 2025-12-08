@@ -95,9 +95,13 @@ class Cuti(Base):
     leave_days = Column(Integer)
     leave_remaining = Column(Integer)
 
+    # APPROVAL PIPELINE
     approval_div_head = Column(String, default=None)
     approval_hrd = Column(String, default=None)
-    approval_status = Column(String, default="pending") 
+    approval_admin = Column(String, default=None)
+
+    # final status
+    approval_status = Column(String, default="pending")
     approved_by = Column(String, default=None)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
