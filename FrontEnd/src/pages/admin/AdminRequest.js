@@ -5,7 +5,7 @@ import Navbar from "../../components/Navbar";
 import { api } from "../../api/api";
 import "../../styles/request.css";
 
-export default function AdminRequestList() {
+export default function AdminRequest() {
   const [combined, setCombined] = useState([]);
   const navigate = useNavigate();
 
@@ -20,6 +20,7 @@ export default function AdminRequestList() {
     const dalam = await api.get("/dinasDalamKota/");
     const luar = await api.get("/dinasLuarKota/");
     const pribadi = await api.get("/private/all");
+    const cuti = (await api.get("/cuti/all")).data;
 
     const list = [
 
@@ -44,7 +45,7 @@ export default function AdminRequestList() {
         id: `DLK-${d.id}`,
         category: "luar",
         name: d.name,
-        detail1: `Department: ${d.department}`,
+        detail1: `Department: ${d.division}`,
         detail2: `Destination: ${d.destination}`,
         detail3: `Depart: ${d.depart_date} → Return: ${d.return_date}`,
         status: d.approval_status,
@@ -70,6 +71,26 @@ export default function AdminRequestList() {
             : `Temporary Leave: ${p.temp_leave_start}`,
         status: p.approval_status,
         created_at: p.created_at,
+      })),
+
+      // ====== CUTI =======
+      ...cuti.map((c) => ({
+        formType: "Cuti",
+        rawId: c.id,
+        id: `C-${c.id}`,
+        category: "cuti",
+        name: c.name,
+        detail1: `Tipe: ${c.cuti_type}`,
+        detail2: `Tanggal: ${c.date_start} - ${c.date_end}`,
+        detail3: `Selama: ${c.duration} hari`,
+        detail4: `Keperluan: ${c.purpose}`,
+        detail5: `Alamat: ${c.address}`,
+        detail6: `No. HP: ${c.phone_number}`,
+        detail7: `Catataan: ${c.notes}`,
+        detail8: `Total Cuti: ${c.leave_days}`,
+        detail9: `Sisa Cuti: ${c.leave_remaining}`,
+        status: c.approval_status,
+        created_at: c.created_at,
       })),
 
     ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));

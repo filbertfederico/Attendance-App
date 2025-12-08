@@ -12,13 +12,13 @@ export default function ProtectedRoute({ role, children }) {
   if (!token) return <Navigate to="/" />;
   
   // staff-only
-  if (role === "staff" && userRole !== "staff") return <Navigate to="/" />;
+  if (role === "staff" && userRole !== "staff") return <Navigate to="/home" />;
   
   // admin-only
-  if (role === "admin" && userRole !== "admin") return <Navigate to="/" />;
+  if (role === "admin" && userRole !== "admin") return <Navigate to="/home" />;
   
   // division head-only
-  if (role === "div_head" && userRole !== "div_head") return <Navigate to="/" />;
+  if (role === "div_head" && userRole !== "div_head") return <Navigate to="/home" />;
 
   return children;
 }

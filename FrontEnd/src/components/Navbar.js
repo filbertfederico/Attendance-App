@@ -8,9 +8,8 @@ export default function Navbar() {
 
   const role = localStorage.getItem("role");
   const name = localStorage.getItem("name");
-  const division = localStorage.getItem("division");
-
   const isDivHead = role === "div_head";
+  const isAdmin = role === "admin";
 
   const logout = async () => {
     const auth = getAuth();

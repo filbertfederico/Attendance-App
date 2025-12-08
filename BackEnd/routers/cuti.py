@@ -50,6 +50,14 @@ def create_cuti(data: dict, current_user=Depends(get_current_user), db: Session 
 def my_cuti(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     return db.query(Cuti).filter(Cuti.name == current_user.name).all()
 
+# -------------------------------------------------------
+# ADMIN VIEW — All Requests
+# -------------------------------------------------------
+@router.get("/all")
+def get_all_cuti(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if current_user.role != "admin":
+        raise HTTPException(403, "Admin only")
+    return db.query(Cuti).all()
 
 # -------------------------------------------------------
 # DIVISION HEAD VIEW — Only Same Division
@@ -65,7 +73,6 @@ def div_head_view(current_user=Depends(get_current_user), db: Session = Depends(
         .filter(Cuti.approval_status == "pending")
         .all()
     )
-
 
 # -------------------------------------------------------
 # DIVISION HEAD APPROVE
@@ -84,7 +91,6 @@ def cuti_div_head_approve(id: int, current_user=Depends(get_current_user), db: S
     db.commit()
 
     return {"message": "Division head approved"}
-
 
 # -------------------------------------------------------
 # DIVISION HEAD DENY
@@ -105,7 +111,6 @@ def cuti_div_head_deny(id: int, current_user=Depends(get_current_user), db: Sess
 
     db.commit()
     return {"message": "Division head denied"}
-
 
 # -------------------------------------------------------
 # HRD FINAL APPROVAL
@@ -129,7 +134,6 @@ def cuti_hrd_approve(id: int, current_user=Depends(get_current_user), db: Sessio
 
     db.commit()
     return {"message": "HRD approved (final)"}
-
 
 # -------------------------------------------------------
 # HRD DENY

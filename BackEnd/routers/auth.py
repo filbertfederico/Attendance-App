@@ -1,6 +1,8 @@
 # BackEnd/routers/auth.py
+
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from BackEnd.database import get_db
 from BackEnd.models import User
@@ -8,10 +10,17 @@ from .firebase_auth.firebase_auth import verify_firebase_token
 
 router = APIRouter()
 
+# ============================================================
+# Helper — get user by email (CASE-INSENSITIVE)
+# ============================================================
+def get_user_by_email(db: Session, email: str):
+    normalized = email.strip().lower()
+    return db.query(User).filter(func.lower(User.email) == normalized).first()
 
-# ===========================================
-# /auth/me - returns logged-in user info
-# ===========================================
+
+# ============================================================
+# /auth/me — FRONTEND uses this to detect role/division
+# ============================================================
 @router.get("/me")
 def auth_me(
     authorization: str = Header(None),
@@ -21,35 +30,31 @@ def auth_me(
         raise HTTPException(401, "Missing Authorization header")
 
     if not authorization.lower().startswith("bearer "):
-        raise HTTPException(401, "Invalid Authorization format")
+        raise HTTPException(401, "Authorization must start with 'Bearer'")
 
     token = authorization.split(" ")[1]
     decoded = verify_firebase_token(token)
 
     email = decoded.get("email")
     if not email:
-        raise HTTPException(400, "Firebase token missing email")
+        raise HTTPException(400, "Token missing email")
 
-    # Find user in DB
-    user = db.query(User).filter(User.email == email).first()
+    user = get_user_by_email(db, email)
     if not user:
-        raise HTTPException(404, f"User {email} not found in database")
-
-    # Ensure division always exists (return string)
-    division = getattr(user, "division", None) or "GENERAL"
+        raise HTTPException(404, f"User {email} is not registered in database.")
 
     return {
         "id": user.id,
         "email": user.email,
         "name": user.name,
         "role": user.role,
-        "division": division
+        "division": user.division or "GENERAL"
     }
 
 
-# ===========================================
-# get_current_user - for protected endpoints
-# ===========================================
+# ============================================================
+# get_current_user — used inside ALL protected routes
+# ============================================================
 def get_current_user(
     authorization: str = Header(None),
     db: Session = Depends(get_db)
@@ -58,41 +63,45 @@ def get_current_user(
         raise HTTPException(401, "Missing Authorization header")
 
     if not authorization.lower().startswith("bearer "):
-        raise HTTPException(401, "Invalid Authorization format")
+        raise HTTPException(401, "Authorization must start with 'Bearer'")
 
     token = authorization.split(" ")[1]
     decoded = verify_firebase_token(token)
 
-    email = decoded["email"]
+    email = decoded.get("email")
+    if not email:
+        raise HTTPException(400, "Token missing email")
+
+    # Firebase may not include name — fallback to email prefix
     fallback_name = email.split("@")[0]
     name = decoded.get("name", fallback_name)
 
-    # Look up user
-    user = db.query(User).filter(User.email == email).first()
+    # Ensure case-insensitive lookup
+    user = get_user_by_email(db, email)
 
-    # Auto-create if not found
+    # DO NOT AUTO-CREATE USERS ANYMORE
     if not user:
-        user = User(
-            name=name,
-            email=email,
-            role="staff",
-            division="GENERAL"
+        raise HTTPException(
+            403,
+            "User is not registered in the system. Please contact the administrator."
         )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
 
-    # Guarantee division exists
-    if not getattr(user, "division", None):
+    # Sync name if Firebase displays updated name
+    if user.name != name:
+        user.name = name
+        db.commit()
+
+    # Ensure division exists
+    if not user.division:
         user.division = "GENERAL"
         db.commit()
 
     return user
 
 
-# ===========================================
-# Only admin
-# ===========================================
+# ============================================================
+# ADMIN PROTECTION — For admin-only routes
+# ============================================================
 def require_admin(user: User = Depends(get_current_user)):
     if user.role != "admin":
         raise HTTPException(403, "Admin only")

@@ -14,8 +14,8 @@ import DivHeadApproval from "./pages/DivHeadApproval";
 import CutiRequest from "./pages/CutiRequest";
 
 // ADMIN PAGES
-import AdminRequestList from "./pages/AdminRequestList";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminRequest from "./pages/admin/AdminRequest";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 function App() {
   return (
@@ -39,7 +39,7 @@ function App() {
         <Route path="/div-head-approval" element={<ProtectedRoute role={"div_head"}><DivHeadApproval/></ProtectedRoute>} />
 
         {/* ADMIN ROUTE */}
-        <Route path="/admin/all-requests" element={<ProtectedRoute role={"admin"}><AdminRequestList /></ProtectedRoute>} />
+        <Route path="/admin/all-requests" element={<ProtectedRoute role={"admin"}><AdminRequest /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute role={"admin"}><AdminDashboard/></ProtectedRoute>} />
 
       </Routes>
