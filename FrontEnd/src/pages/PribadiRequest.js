@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 
 export default function PribadiRequest() {
   const userName = localStorage.getItem("name");
+  const division = localStorage.getItem("division");
   const [form, setForm] = useState({
     title: "",
     division: "",
@@ -87,7 +88,7 @@ export default function PribadiRequest() {
 
           <p><b>Divisi:</b><input
             name="division"
-            value={form.division}
+            value={division}
             onChange={handleChange}
             required
           /></p>

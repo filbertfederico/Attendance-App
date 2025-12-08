@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 
 export default function DinasLuarKotaRequest() {
   const userName = localStorage.getItem("name");
+  const division = localStorage.getItem("division");
 
   const [form, setForm] = useState({
     name: userName,
@@ -76,7 +77,7 @@ export default function DinasLuarKotaRequest() {
           <label>Departemen:</label>
           <input 
             name="division"
-            value={form.division}
+            value={division}
             onChange={handleChange}
             required
           />

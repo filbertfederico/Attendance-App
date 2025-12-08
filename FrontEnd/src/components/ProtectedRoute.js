@@ -1,3 +1,4 @@
+// FrontEnd/src/components/ProtectedRoute.js
 import React from "react";
 import { Navigate } from "react-router-dom";
 
@@ -6,27 +7,18 @@ export default function ProtectedRoute({ role, children }) {
   const token = localStorage.getItem("firebaseToken");
 
   const userRole = localStorage.getItem("role");       // "staff" or "admin"
-  const division = localStorage.getItem("division");   // "DIV_HEAD_OPS", "OPS"
 
-  const isDivHead = division?.startsWith("DIV_HEAD_");
-
-  // Not logged in -> send to login
+  // Not logged in
   if (!token) return <Navigate to="/" />;
-
-  // staff-only routes:
-  if (role === "staff" && userRole !== "staff") {
-    return <Navigate to="/" />;
-  }
-
-  // admin-only routes:
-  if (role === "admin" && userRole !== "admin") {
-    return <Navigate to="/" />;
-  }
-
-  // division head-only routes:
-  if (role === "div_head" && !isDivHead) {
-    return <Navigate to="/" />;
-  }
+  
+  // staff-only
+  if (role === "staff" && userRole !== "staff") return <Navigate to="/" />;
+  
+  // admin-only
+  if (role === "admin" && userRole !== "admin") return <Navigate to="/" />;
+  
+  // division head-only
+  if (role === "div_head" && userRole !== "div_head") return <Navigate to="/" />;
 
   return children;
 }

@@ -14,8 +14,8 @@ import DivHeadApproval from "./pages/DivHeadApproval";
 import CutiRequest from "./pages/CutiRequest";
 
 // ADMIN PAGES
-import AdminRequestList from "./pages/admin/AdminRequest";
-import AdminDashboard from "./pages/admin/AdminDashboard"
+import AdminRequestList from "./pages/AdminRequestList";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   return (
@@ -33,13 +33,14 @@ function App() {
         <Route path="/pribadi-request" element={<PribadiRequest />} />
         <Route path="/my-requests" element={<MyRequest />} />
         <Route path="/switching" element={<DinasSwitching />} />
-        <Route path="/div-head-approval" element={<DivHeadApproval/>} />
         <Route path="/cuti-request" element={<CutiRequest />}/>
 
+        {/* DIV_HEAD */}
+        <Route path="/div-head-approval" element={<ProtectedRoute role={"div_head"}><DivHeadApproval/></ProtectedRoute>} />
 
         {/* ADMIN ROUTE */}
-        <Route path="/admin/all-requests" element={<AdminRequestList />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard/>} />
+        <Route path="/admin/all-requests" element={<ProtectedRoute role={"admin"}><AdminRequestList /></ProtectedRoute>} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute role={"admin"}><AdminDashboard/></ProtectedRoute>} />
 
       </Routes>
     </Router>

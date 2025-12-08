@@ -1,21 +1,15 @@
 # BackEnd/routers/utils.py
 
-def get_div_head_role(division: str) -> str | None:
-    if not division:
-        return None
+def is_div_head_of_division(user, division: str) -> bool:
+    """
+    Return True if this user is the division head of the given division.
+    """
+    return user.role == "div_head" and user.division.upper() == division.upper()
 
-    division = division.upper().strip()
 
-    if division.startswith("DIV_HEAD_"):
-        return division
+def is_hrd_head(user) -> bool:
+    return user.role == "div_head" and user.division.upper() == "HRD"
 
-    mapping = {
-        "OPS": "DIV_HEAD_OPS",
-        "HRD": "DIV_HEAD_HRD",
-        "HSE": "DIV_HEAD_HSE",
-        "MARKETING": "DIV_HEAD_MARKETING",
-        "FINANCE": "DIV_HEAD_FINANCE",
-        "GENERAL": "DIV_HEAD_GENERAL",
-    }
 
-    return mapping.get(division)
+def is_finance_head(user) -> bool:
+    return user.role == "div_head" and user.division.upper() == "FINANCE"

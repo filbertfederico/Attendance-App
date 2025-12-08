@@ -10,13 +10,7 @@ export default function Navbar() {
   const name = localStorage.getItem("name");
   const division = localStorage.getItem("division");
 
-  const isDivHead = [
-    "DIV_HEAD_FINANCE",
-    "DIV_HEAD_HRD",
-    "DIV_HEAD_HSE",
-    "DIV_HEAD_OPS",
-    "DIV_HEAD_MARKETING",
-  ].includes(division);
+  const isDivHead = role === "div_head";
 
   const logout = async () => {
     const auth = getAuth();
@@ -41,8 +35,8 @@ export default function Navbar() {
             <a onClick={() => navigate("/home")}>Home</a>
             <a onClick={() => navigate("/switching")}>Dinas</a>
             <a onClick={() => navigate("/pribadi-request")}>Izin</a>
-            <a onClick={() => navigate("/my-requests")}>Semua Form</a>
             <a onClick={() => navigate("/cuti-request")}>Cuti</a>
+            <a onClick={() => navigate("/my-requests")}>Semua Form</a>
           </>
         )}
 

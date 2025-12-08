@@ -6,7 +6,8 @@ from pydantic import BaseModel
 from BackEnd.database import get_db
 from BackEnd.models import Pribadi
 from .auth import get_current_user
-from .utils import get_div_head_role
+
+from .utils import is_div_head_of_division, is_hrd_head
 
 router = APIRouter()
 
@@ -72,12 +73,9 @@ async def get_all_private(current_user=Depends(get_current_user), db: Session = 
 
 @router.get("/by-division")
 def get_private_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    div = current_user.division
-
-    if not div or not div.startswith("DIV_HEAD_"):
+    if current_user.role != "div_head":
         raise HTTPException(403, "Division head only")
-
-    user_div = div.replace("DIV_HEAD_", "")
+    user_div = current_user.division
 
     return (
         db.query(Pribadi)
@@ -92,14 +90,12 @@ def approve_private(id: int, db: Session = Depends(get_db), current_user=Depends
     if not req:
         raise HTTPException(404, "Request not found")
 
-    required = get_div_head_role(req.division)
-
-    if current_user.division != required:
+    if not is_div_head_of_division(current_user, req.division):
         raise HTTPException(403, "Not authorized to approve this")
 
-    req.approval_status = "approved"
+    req.approval_div_head = "approved"
     db.commit()
-    return {"message": "Request approved"}
+    return {"message": "Division head approved"}
 
 @router.put("/{id}/div-head-deny")
 def deny_private(id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
@@ -107,26 +103,26 @@ def deny_private(id: int, db: Session = Depends(get_db), current_user=Depends(ge
     if not req:
         raise HTTPException(404, "Not found")
 
-    required = get_div_head_role(req.division)
-
-    if current_user.division != required:
+    if not is_div_head_of_division(current_user, req.division):
         raise HTTPException(403, "Not authorized")
 
     req.approval_status = "rejected"
+    req.approval_div_head = "rejected"
+    req.approved_by = current_user.name
     db.commit()
-    return {"message": "Request rejected"}
+    return {"message": "Division head denied"}
 
 @router.put("/{id}/approve")
-async def approve_private(id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+async def approve_private_admin(id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
     req = db.query(Pribadi).filter(Pribadi.id == id).first()
     if not req:
         raise HTTPException(404, "Request not found")
-    div_head_role = get_div_head_role(req.division)
-    requester_is_div_head = (req.name and get_div_head_role(req.division) == req.name)
-    if req.approval_div_head is None and not (req.name and current_user.role == "admin" and requester_is_div_head):
+
+    if req.approval_div_head != "approved":
         raise HTTPException(403, "Waiting for division head approval")
+
     req.approval_admin = "approved"
     req.approval_status = "approved"
     req.approved_by = current_user.name
@@ -138,8 +134,12 @@ async def deny_private(id: int, current_user=Depends(get_current_user), db: Sess
     req = db.query(Pribadi).filter(Pribadi.id == id).first()
     if not req:
         raise HTTPException(404, "Request not found")
-    allowed_roles = { get_div_head_role(req.division), "admin" }
-    if current_user.division in allowed_roles or current_user.role == "admin":
+
+    if (
+        is_div_head_of_division(current_user, req.division)
+        or is_hrd_head(current_user)
+        or current_user.role == "admin"
+    ):
         req.approval_status = "denied"
         req.approved_by = current_user.name
         db.commit()

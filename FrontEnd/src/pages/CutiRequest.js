@@ -24,16 +24,18 @@ export default function CutiRequest() {
   });
 
   function updateField(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   }
 
-  async function submit() {
+
+  async function submit(e) {
+    e.preventDefault();
     try {
-      await api.post("/cuti", {
-        ...form,
-        name: name,
-        division: division,
-      });
+      await api.post("/cuti/", form);
+    
       Swal.fire("Success", "Cuti submitted", "success");
     } catch (err) {
       Swal.fire("Error", err.response?.data?.detail || "Failed", "error");
@@ -120,6 +122,7 @@ export default function CutiRequest() {
                 name="date_start"
                 onChange={updateField}
                 className="cuti-input"
+                required
               />
               <span className="cuti-date-to">Sampai Dengan</span>
               <input
@@ -127,6 +130,7 @@ export default function CutiRequest() {
                 name="date_end"
                 onChange={updateField}
                 className="cuti-input"
+                required
               />
             </div>
           </div>
@@ -142,6 +146,7 @@ export default function CutiRequest() {
                 name="duration"
                 onChange={updateField}
                 className="cuti-input-small"
+                required
               />
               <span> Hari</span>
             </div>
@@ -155,6 +160,7 @@ export default function CutiRequest() {
               name="purpose"
               onChange={updateField}
               className="cuti-textarea"
+              required
             ></textarea>
           </div>
 
@@ -166,6 +172,7 @@ export default function CutiRequest() {
               name="address"
               onChange={updateField}
               className="cuti-textarea"
+              required
             ></textarea>
           </div>
 
@@ -177,6 +184,7 @@ export default function CutiRequest() {
               name="phone"
               onChange={updateField}
               className="cuti-input"
+              required
             />
           </div>
 
@@ -201,6 +209,7 @@ export default function CutiRequest() {
                 name="leave_days"
                 onChange={updateField}
                 className="cuti-input-small"
+                required
               />
               <span> Hari</span>
             </div>
@@ -216,6 +225,7 @@ export default function CutiRequest() {
                 name="leave_remaining"
                 onChange={updateField}
                 className="cuti-input-small"
+                required
               />
               <span> Hari</span>
             </div>

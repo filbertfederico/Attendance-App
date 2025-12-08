@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 
 export default function DinasDalamKotaRequest() {
   const userName = localStorage.getItem("name");
+  const division = localStorage.getItem("division");
 
   const [form, setForm] = useState({
     division: "",
@@ -85,7 +86,7 @@ export default function DinasDalamKotaRequest() {
           <input
             type="text"
             name="division"
-            value={form.division}
+            value={division}
             onChange={handleChange}
             required
           />

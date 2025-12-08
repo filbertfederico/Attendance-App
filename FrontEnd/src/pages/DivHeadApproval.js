@@ -1,28 +1,44 @@
+// FrontEnd/src/pages/DivHeadApproval.js
+
 import React, { useEffect, useState } from "react";
 import { api } from "../api/api";
 import Navbar from "../components/Navbar";
-import "../styles/request.css";
 import Swal from "sweetalert2";
+import "../styles/request.css";
 
 export default function DivHeadApproval() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const userRole = localStorage.getItem("role");
+  const userDivision = localStorage.getItem("division");
+
+  // -------------------------------------------------------------------
+  // LOAD REQUESTS FOR THIS DIVISION HEAD
+  // -------------------------------------------------------------------
   async function load() {
     try {
-      const privateRes = await api.get("/private/by-division");
+      if (userRole !== "div_head") {
+        setRequests([]);
+        return;
+      }
+
+      // backend filters by division automatically
+      const pribadiRes = await api.get("/private/by-division");
+      const cutiRes = await api.get("/cuti/by-division");
       const dalamRes = await api.get("/dinasDalamKota/by-division");
       const luarRes = await api.get("/dinasLuarKota/by-division");
 
-      const list = [
-        ...privateRes.data.map((r) => ({ ...r, _type: "private" })),
-        ...dalamRes.data.map((r) => ({ ...r, _type: "dinasDalamKota" })),
-        ...luarRes.data.map((r) => ({ ...r, _type: "dinasLuarKota" })),
+      const combined = [
+        ...pribadiRes.data.map((r) => ({ ...r, _type: "pribadi" })),
+        ...cutiRes.data.map((r) => ({ ...r, _type: "cuti" })),
+        ...dalamRes.data.map((r) => ({ ...r, _type: "dalam" })),
+        ...luarRes.data.map((r) => ({ ...r, _type: "luar" })),
       ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-      setRequests(list);
+      setRequests(combined);
     } catch (err) {
-      console.error("Failed to load:", err);
+      console.error(err);
       setRequests([]);
     } finally {
       setLoading(false);
@@ -33,38 +49,57 @@ export default function DivHeadApproval() {
     load();
   }, []);
 
-  // -----------------------------
-  // APPROVE / DENY HANDLER
-  // -----------------------------
+  // -------------------------------------------------------------------
+  // PERMISSION CHECK
+  // -------------------------------------------------------------------
+  function canApprove(item) {
+    return userRole === "div_head" && item.division === userDivision;
+  }
+
+  // -------------------------------------------------------------------
+  // APPROVE / DENY
+  // -------------------------------------------------------------------
   async function doAction(item, action) {
+    if (!canApprove(item)) {
+      Swal.fire("Tidak diizinkan", "Anda tidak bisa menyetujui item ini", "error");
+      return;
+    }
+
     try {
       let url = "";
 
-      if (item._type === "private") {
+      // PRIBADI
+      if (item._type === "pribadi") {
         url = `/private/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
-      } else if (item._type === "dinasDalamKota") {
+      }
+
+      // CUTI
+      if (item._type === "cuti") {
+        url = `/cuti/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
+      }
+
+      // DINAS DALAM KOTA
+      if (item._type === "dalam") {
         url = `/dinasDalamKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
-      } else if (item._type === "dinasLuarKota") {
+      }
+
+      // DINAS LUAR KOTA
+      if (item._type === "luar") {
         url = `/dinasLuarKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
       }
 
-      const res = await api.put(url);
+      await api.put(url);
 
       Swal.fire({
         icon: "success",
-        title: action === "approve" ? "Approved" : "Denied",
-        text: res.data?.message || "",
+        title: action === "approve" ? "Approved" : "Rejected",
         timer: 1500,
         showConfirmButton: false,
       });
 
       load();
     } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Action Failed",
-        text: err.response?.data?.detail || "Try again",
-      });
+      Swal.fire("Error", err.response?.data?.detail || "Failed", "error");
     }
   }
 
@@ -74,41 +109,65 @@ export default function DivHeadApproval() {
     <>
       <Navbar />
       <div className="page-container">
-        <h2>Division Head Approvals</h2>
+        <h2>Approval Kepala Divisi — {userDivision}</h2>
 
-        {requests.length === 0 && <p>No pending requests.</p>}
+        {requests.length === 0 && <p>Tidak ada request menunggu.</p>}
 
         <div className="card-list">
           {requests.map((r) => (
             <div className="card" key={`${r._type}-${r.id}`}>
               <h3>
-                {r._type === "private"
-                  ? "Private Request"
-                  : r._type === "dinasDalamKota"
+                {r._type === "pribadi"
+                  ? "Izin Pribadi"
+                  : r._type === "cuti"
+                  ? "Cuti"
+                  : r._type === "dalam"
                   ? "Dinas Dalam Kota"
                   : "Dinas Luar Kota"}
               </h3>
 
-              <p><b>Name:</b> {r.name}</p>
-              <p><b>Division:</b> {r.division || r.department}</p>
+              <p><b>Nama:</b> {r.name}</p>
+              <p><b>Divisi:</b> {r.division}</p>
 
-              {r._type === "private" && <p><b>Reason:</b> {r.title}</p>}
-              {r._type === "dinasDalamKota" && <p><b>Purpose:</b> {r.purpose}</p>}
-              {r._type === "dinasLuarKota" && (
+              {/* DETAILS FOR EACH TYPE */}
+              {r._type === "pribadi" && (
                 <>
-                  <p><b>Destination:</b> {r.destination}</p>
-                  <p><b>Purpose:</b> {r.purpose}</p>
+                  <p><b>Judul:</b> {r.title}</p>
+                  <p><b>Tipe:</b> {r.request_type}</p>
+                </>
+              )}
+
+              {r._type === "cuti" && (
+                <>
+                  <p><b>Tipe Cuti:</b> {r.cuti_type}</p>
+                  <p><b>Dari:</b> {r.date_start}</p>
+                  <p><b>Sampai:</b> {r.date_end}</p>
+                </>
+              )}
+
+              {r._type === "dalam" && (
+                <>
+                  <p><b>Tujuan:</b> {r.purpose}</p>
+                </>
+              )}
+
+              {r._type === "luar" && (
+                <>
+                  <p><b>Tujuan:</b> {r.destination}</p>
+                  <p><b>Keperluan:</b> {r.purpose}</p>
                 </>
               )}
 
               <p><b>Status:</b> {r.approval_status}</p>
 
-              <div style={{ marginTop: 10 }}>
-                <button className="approve-btn" onClick={() => doAction(r, "approve")}>Approve</button>
-                <button className="deny-btn" onClick={() => doAction(r, "deny")} style={{ marginLeft: 8 }}>
-                  Deny
-                </button>
-              </div>
+              {canApprove(r) && (
+                <div style={{ marginTop: "10px" }}>
+                  <button onClick={() => doAction(r, "approve")} className="approve-btn">Approve</button>
+                  <button onClick={() => doAction(r, "deny")} className="deny-btn" style={{ marginLeft: 8 }}>
+                    Reject
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

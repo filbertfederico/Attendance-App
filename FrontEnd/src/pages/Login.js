@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { api } from "../api/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -12,7 +13,6 @@ export default function Login() {
   const [pw, setPw] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState("");
 
   const login = async (e) => {
     e.preventDefault();
@@ -26,16 +26,18 @@ export default function Login() {
 
       // Firebase login
       const res = await signInWithEmailAndPassword(auth, trimmedEmail, pw);
-      const token = await res.user.getIdToken();
+      const token = await res.user.getIdToken(true);
 
-      console.log("📤 TOKEN SENT TO BACKEND");
+      console.log("📤 TOKEN GENERATED:");
+
+      // Save token so axios will include it automatically
+      localStorage.setItem("token", token);
 
       // Verify with backend
-      const meRes = await fetch(`https://attendance-app-vwy8.onrender.com/auth/me`, {
+      const meRes = await fetch("https://attendance-app-vwy8.onrender.com/auth/me", {
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
-        credentials: "include"
       });
 
       if (!meRes.ok) {
@@ -45,13 +47,11 @@ export default function Login() {
 
       const me = await meRes.json();
 
-      
-      // Save session
-      localStorage.setItem("token", token);
+      // Save user info
       localStorage.setItem("role", me.role);
       localStorage.setItem("name", me.name);
       localStorage.setItem("division", me.division);
-        
+
       Swal.fire({
         icon: "success",
         title: "Login Successful",
@@ -62,17 +62,15 @@ export default function Login() {
 
       // Redirect
       navigate(me.role === "admin" ? "/admin/all-requests" : "/home");
-      
+
     } catch (err) {
       console.error("🔥 LOGIN ERROR:", err);
 
       let msg = "Invalid email or password.";
-
-      // Firebase-specific errors
       if (err.code === "auth/user-not-found") msg = "User not found.";
       if (err.code === "auth/invalid-email") msg = "Invalid email format.";
       if (err.code === "auth/network-request-failed") msg = "Network error.";
-      
+
       Swal.fire({
         icon: "error",
         title: "Login Gagal",
@@ -84,8 +82,6 @@ export default function Login() {
 
     setLoading(false);
   };
-
-  
 
   return (
     <div style={{ maxWidth: "320px", margin: "60px auto" }}>

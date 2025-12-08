@@ -8,7 +8,9 @@ from BackEnd.models import DinasLuarKota
 from BackEnd.database import get_db
 from .auth import get_current_user
 
-from .utils import get_div_head_role
+from .utils import is_hrd_head
+from .utils import is_finance_head
+from .utils import is_div_head_of_division
 
 router = APIRouter()
 
@@ -86,10 +88,10 @@ async def get_all_luar_kota(
 def get_dinas_luar_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     div = current_user.division
 
-    if not div.startswith("DIV_HEAD_"):
+    if current_user.role != "div_head":
         raise HTTPException(403, "Division head only")
 
-    user_div = div.replace("DIV_HEAD_", "")
+    user_div = current_user.division
 
     return (
         db.query(DinasLuarKota)
@@ -105,9 +107,7 @@ def approve_dinas_luar(id: int, db: Session = Depends(get_db), current_user=Depe
     if not req:
         raise HTTPException(404, "Not found")
 
-    required = get_div_head_role(req.division)
-
-    if current_user.division != required:
+    if not is_div_head_of_division(current_user, req.division):
         raise HTTPException(403, "Not authorized")
 
     req.approval_status = "approved"
@@ -121,9 +121,7 @@ def deny_dinas_luar(id: int, db: Session = Depends(get_db), current_user=Depends
     if not req:
         raise HTTPException(404, "Not found")
 
-    required = get_div_head_role(req.division)
-
-    if current_user.division != required:
+    if not is_div_head_of_division(current_user, req.division):
         raise HTTPException(403, "Not authorized")
 
     req.approval_status = "rejected"
@@ -136,9 +134,9 @@ async def hrd_approve(id: int, current_user=Depends(get_current_user), db: Sessi
     req = db.query(DinasLuarKota).filter(DinasLuarKota.id == id).first()
     if not req:
         raise HTTPException(404, "Request not found")
-    if current_user.division != "DIV_HEAD_HRD":
+    if not is_hrd_head(current_user):
         raise HTTPException(403, "Only HRD head can approve")
-    if not (req.approval_div_head == "approved" or get_div_head_role(req.division) == req.name):
+    if req.approval_div_head != "approved":
         raise HTTPException(403, "Waiting for division head approval")
     req.approval_hrd = "approved"
     db.commit()
@@ -150,7 +148,7 @@ async def hrd_deny(id: int, current_user=Depends(get_current_user), db: Session 
     req = db.query(DinasLuarKota).filter(DinasLuarKota.id == id).first()
     if not req:
         raise HTTPException(404, "Request not found")
-    if current_user.division != "DIV_HEAD_HRD":
+    if not is_hrd_head(current_user):
         raise HTTPException(403, "Only HRD head can deny")
     req.approval_status = "denied"
     req.approved_by = current_user.name
@@ -163,7 +161,7 @@ async def finance_approve(id: int, current_user=Depends(get_current_user), db: S
     req = db.query(DinasLuarKota).filter(DinasLuarKota.id == id).first()
     if not req:
         raise HTTPException(404, "Request not found")
-    if current_user.division != "DIV_HEAD_FINANCE":
+    if not is_finance_head(current_user):
         raise HTTPException(403, "Only Finance head can approve")
     if req.approval_hrd != "approved":
         raise HTTPException(403, "Waiting for HRD approval")
@@ -197,10 +195,15 @@ async def deny_luar_kota(
     if not req:
         raise HTTPException(404, "Request not found")
 
-    allowed_roles = { get_div_head_role(req.division), "DIV_HEAD_HRD", "DIV_HEAD_FINANCE", "admin" }
-    if current_user.division in allowed_roles or current_user.role == "admin":
+    if (
+    is_div_head_of_division(current_user, req.division)
+        or is_hrd_head(current_user)
+        or is_finance_head(current_user)
+        or current_user.role == "admin"
+    ):
         req.approval_status = "denied"
         req.approved_by = current_user.name
         db.commit()
-        return {"message": "denied"}
-    raise HTTPException(403, "Not authorized to deny")
+        return {"message": "Denied"}
+    
+    raise HTTPException(403, "Not authorized")
