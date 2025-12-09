@@ -1,5 +1,4 @@
 // FrontEnd/src/pages/DivHeadApproval.js
-
 import React, { useEffect, useState } from "react";
 import { api } from "../api/api";
 import Navbar from "../components/Navbar";
@@ -13,9 +12,9 @@ export default function DivHeadApproval() {
   const userRole = localStorage.getItem("role");
   const userDivision = localStorage.getItem("division");
 
-  // -------------------------------------------------------------------
-  // LOAD REQUESTS FOR THIS DIVISION HEAD
-  // -------------------------------------------------------------------
+  // -------------------------------------------------------
+  // LOAD REQUESTS FOR THIS DIVISION
+  // -------------------------------------------------------
   async function load() {
     try {
       if (userRole !== "div_head") {
@@ -23,7 +22,6 @@ export default function DivHeadApproval() {
         return;
       }
 
-      // backend filters by division automatically
       const pribadiRes = await api.get("/private/by-division");
       const cutiRes = await api.get("/cuti/by-division");
       const dalamRes = await api.get("/dinasDalamKota/by-division");
@@ -49,16 +47,16 @@ export default function DivHeadApproval() {
     load();
   }, []);
 
-  // -------------------------------------------------------------------
+  // -------------------------------------------------------
   // PERMISSION CHECK
-  // -------------------------------------------------------------------
+  // -------------------------------------------------------
   function canApprove(item) {
     return userRole === "div_head" && item.division === userDivision;
   }
 
-  // -------------------------------------------------------------------
-  // APPROVE / DENY
-  // -------------------------------------------------------------------
+  // -------------------------------------------------------
+  // ACTION HANDLER
+  // -------------------------------------------------------
   async function doAction(item, action) {
     if (!canApprove(item)) {
       Swal.fire("Tidak diizinkan", "Anda tidak bisa menyetujui item ini", "error");
@@ -68,22 +66,18 @@ export default function DivHeadApproval() {
     try {
       let url = "";
 
-      // PRIBADI
       if (item._type === "pribadi") {
         url = `/private/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
       }
 
-      // CUTI
       if (item._type === "cuti") {
         url = `/cuti/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
       }
 
-      // DINAS DALAM KOTA
       if (item._type === "dalam") {
         url = `/dinasDalamKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
       }
 
-      // DINAS LUAR KOTA
       if (item._type === "luar") {
         url = `/dinasLuarKota/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
       }
@@ -93,13 +87,23 @@ export default function DivHeadApproval() {
       Swal.fire({
         icon: "success",
         title: action === "approve" ? "Approved" : "Rejected",
-        timer: 1500,
         showConfirmButton: false,
+        timer: 1500,
       });
 
       load();
     } catch (err) {
       Swal.fire("Error", err.response?.data?.detail || "Failed", "error");
+    }
+  }
+
+  function translateFormType(type) {
+    switch (type) {
+      case "pribadi": return "Izin Pribadi";
+      case "cuti": return "Cuti";
+      case "dalam": return "Dinas Dalam Kota";
+      case "luar": return "Dinas Luar Kota";
+      default: return type;
     }
   }
 
@@ -115,59 +119,80 @@ export default function DivHeadApproval() {
 
         <div className="card-list">
           {requests.map((r) => (
-            <div className="card" key={`${r._type}-${r.id}`}>
-              <h3>
-                {r._type === "pribadi"
-                  ? "Izin Pribadi"
-                  : r._type === "cuti"
-                  ? "Cuti"
-                  : r._type === "dalam"
-                  ? "Dinas Dalam Kota"
-                  : "Dinas Luar Kota"}
-              </h3>
-
-              <p><b>Nama:</b> {r.name}</p>
-              <p><b>Divisi:</b> {r.division}</p>
-
-              {/* DETAILS FOR EACH TYPE */}
-              {r._type === "pribadi" && (
-                <>
-                  <p><b>Judul:</b> {r.title}</p>
-                  <p><b>Tipe:</b> {r.request_type}</p>
-                </>
-              )}
-
+            <div key={r._type + "-" + r.id}>              
               {r._type === "cuti" && (
-                <>
-                  <p><b>Tipe Cuti:</b> {r.cuti_type}</p>
-                  <p><b>Dari:</b> {r.date_start}</p>
-                  <p><b>Sampai:</b> {r.date_end}</p>
-                </>
-              )}
+                <div className="request-card">
 
-              {r._type === "dalam" && (
-                <>
-                  <p><b>Tujuan:</b> {r.purpose}</p>
-                </>
-              )}
+                  {/* HEADER */}
+                  <div className="card-header">
+                    <h3>PERMOHONAN CUTI</h3>
+                    <div className="header-sub">Form Digital</div>
+                  </div>
 
-              {r._type === "luar" && (
-                <>
-                  <p><b>Tujuan:</b> {r.destination}</p>
-                  <p><b>Keperluan:</b> {r.purpose}</p>
-                </>
-              )}
+                  {/* MAIN TABLE */}
+                  <div className="request-table">
+                    <b>Nama</b> <span>{r.name}</span>
+                    <b>Divisi</b> <span>{r.division}</span>
+                    <b>Jenis Cuti</b> <span>{r.cuti_type}</span>
 
-              <p><b>Status:</b> {r.approval_status}</p>
+                    <b>Tanggal</b>
+                    <span>
+                      {r.date_start} — {r.date_end}
+                    </span>
 
-              {canApprove(r) && (
-                <div style={{ marginTop: "10px" }}>
-                  <button onClick={() => doAction(r, "approve")} className="approve-btn">Approve</button>
-                  <button onClick={() => doAction(r, "deny")} className="deny-btn" style={{ marginLeft: 8 }}>
-                    Reject
-                  </button>
+                    <b>Durasi</b> <span>{r.duration} hari</span>
+
+                    <b>Untuk Keperluan</b> <span>{r.purpose || "—"}</span>
+                    <b>Alamat Selama Cuti</b> <span>{r.address || "—"}</span>
+                    <b>No. Telp</b> <span>{r.phone || "—"}</span>
+                    <b>Catatan</b> <span>{r.notes || "—"}</span>
+
+                    <b>Cuti Tersisa</b> <span>{r.leave_days ?? "-"}</span>
+                    <b>Cuti Setelah</b>
+                    <span>
+                      {r.leave_days != null ? r.leave_days - r.duration : "-"}
+                    </span>
+                  </div>
+
+                  {/* STATUS */}
+                  <div className="approval-status">
+                    <div><b>Status Kepala Divisi:</b> {r.approval_div_head || "—"}</div>
+                    <div><b>Status HRD:</b> {r.approval_hrd || "—"}</div>
+                    <div><b>Status Akhir:</b> {r.approval_status}</div>
+                  </div>
+
+                  {/* ACTION BUTTONS */}
+                  {canApprove(r) && (
+                    <div style={{ marginTop: "20px" }}>
+                      <button className="approve-btn" onClick={() => doAction(r, "approve")}>Approve</button>
+                      <button className="deny-btn" style={{ marginLeft: 8 }} onClick={() => doAction(r, "deny")}>Reject</button>
+                    </div>
+                  )}
+
                 </div>
               )}
+
+              {/* ========= OTHER FORM TYPES REMAIN AS THEY ARE ========= */}
+              {r._type !== "cuti" && (
+                <div className="request-card">
+                  <div className="card-header">
+                    <h3>{translateFormType(r._type)}</h3>
+                  </div>
+
+                  <div className="request-table">
+                    <b>Nama</b> <span>{r.name}</span>
+                    <b>Divisi</b> <span>{r.division}</span>
+                  </div>
+
+                  {canApprove(r) && (
+                    <div style={{ marginTop: 20 }}>
+                      <button className="approve-btn" onClick={() => doAction(r, "approve")}>Approve</button>
+                      <button className="deny-btn" style={{ marginLeft: 8 }} onClick={() => doAction(r, "deny")}>Reject</button>
+                    </div>
+                  )}
+                </div>
+              )}
+
             </div>
           ))}
         </div>
