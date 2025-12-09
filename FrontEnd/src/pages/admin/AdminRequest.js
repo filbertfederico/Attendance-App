@@ -85,7 +85,7 @@ export default function AdminRequest() {
         detail3: `Selama: ${c.duration} hari`,
         detail4: `Keperluan: ${c.purpose}`,
         detail5: `Alamat: ${c.address}`,
-        detail6: `No. HP: ${c.phone_number}`,
+        detail6: `No. HP: ${c.phone}`,
         detail7: `Catataan: ${c.notes}`,
         detail8: `Total Cuti: ${c.leave_days}`,
         detail9: `Sisa Cuti: ${c.leave_remaining}`,

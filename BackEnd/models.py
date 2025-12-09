@@ -98,8 +98,6 @@ class Cuti(Base):
     # APPROVAL PIPELINE
     approval_div_head = Column(String, default=None)
     approval_hrd = Column(String, default=None)
-    approval_admin = Column(String, default=None)
-
     # final status
     approval_status = Column(String, default="pending")
     approved_by = Column(String, default=None)
