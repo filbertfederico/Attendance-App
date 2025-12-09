@@ -8,7 +8,7 @@ from BackEnd.database import get_db
 from BackEnd.models import Cuti, User
 from BackEnd.routers.auth import get_current_user
 
-router = APIRouter(prefix="/cuti", tags=["Cuti"])
+router = APIRouter()
 
 
 # ---------------------------------------------------------
