@@ -13,3 +13,6 @@ def is_hrd_head(user) -> bool:
 
 def is_finance_head(user) -> bool:
     return user.role == "div_head" and user.division.upper() == "FINANCE"
+
+def is_hrd_staff(user) -> bool:
+    return user.role == "staff" and user.division.upper() == "HRD & GA"

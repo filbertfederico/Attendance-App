@@ -6,7 +6,7 @@ from datetime import datetime
 from BackEnd.database import get_db
 from BackEnd.models import Cuti, User
 from BackEnd.routers.auth import get_current_user
-from .utils import is_div_head_of_division, is_hrd_head
+from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff
 
 router = APIRouter()
 
@@ -79,6 +79,12 @@ def get_by_division(current_user: User = Depends(get_current_user), db: Session 
 
     if current_user.role not in ["div_head", "admin"]:
         raise HTTPException(403, "Division head only")
+    
+    # HRD & GA staff sees only approved cuti
+    if is_hrd_staff(current_user):
+        return db.query(Cuti) \
+            .order_by(Cuti.created_at.desc()) \
+            .all()
 
     # HRD & GA division head sees ALL cuti across divisions
     if is_hrd_head(current_user):

@@ -12,6 +12,7 @@ import PribadiRequest from "./pages/PribadiRequest";
 import MyRequest from "./pages/MyRequest";
 import DivHeadApproval from "./pages/DivHeadApproval";
 import CutiRequest from "./pages/CutiRequest";
+import HRDViewAll from "./pages/HRDViewAll";
 
 // ADMIN PAGES
 import AdminRequest from "./pages/admin/AdminRequest";
@@ -72,6 +73,15 @@ function App() {
                 <DivHeadApproval />
             </ProtectedRoute>
           }
+        />
+
+        <Route 
+           path="/hrd/view-all"
+           element={
+              <ProtectedRoute allowedRoles={["staff", "div_head", "admin"]}>
+                <HRDViewAll />
+              </ProtectedRoute>
+           }
         />
 
         {/* ADMIN ROUTES */}

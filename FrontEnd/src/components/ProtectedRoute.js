@@ -27,6 +27,14 @@ export default function ProtectedRoute({ allowedRoles, children }) {
         localStorage.setItem("division", me.division);
         localStorage.setItem("name", me.name);
 
+        const role = me.role;
+        const division = me.division;
+
+        if (role === "staff" && division.toUpperCase() === "HRD & GA") {
+          setAllowed(true);
+          return;
+        }
+
         if (!allowedRoles || allowedRoles.includes(me.role)) {
           setAllowed(true);
         } else {

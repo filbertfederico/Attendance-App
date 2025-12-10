@@ -8,6 +8,7 @@ export default function Navbar() {
 
   const role = localStorage.getItem("role");
   const name = localStorage.getItem("name");
+  const division = localStorage.getItem("division");
   const isDivHead = role === "div_head";
   const isAdmin = role === "admin";
 
@@ -38,6 +39,19 @@ export default function Navbar() {
             <a onClick={() => navigate("/my-requests")}>Semua Form</a>
           </>
         )}
+
+        {/* /* HRD STAFF SPECIAL VIEW */}
+        {role === "staff" && division === "HRD & GA" && (
+          <>
+            <a onClick={() => navigate("/home")}>Home</a>
+            <a onClick={() => navigate("/switching")}>Dinas</a>
+            <a onClick={() => navigate("/pribadi-request")}>Izin</a>
+            <a onClick={() => navigate("/cuti-request")}>Cuti</a>
+            <a onClick={() => navigate("/hrd/view-all")}>Semua Form (HRD)</a>
+            <a onClick={() => navigate("/my-requests")}>Semua Form</a>
+          </>
+        )}
+
 
         {/* DIVISION HEAD */}
         {isDivHead && (

@@ -83,8 +83,8 @@ export default function Dashboard() {
         {user.role === "div_head" && (
           <div className="dash-grid">
             <div className="dash-card">
-              <h3>Approval Form Staff</h3>
-              <p>Approve Izin, Cuti, Dinas Dalam, Dinas Luar</p>
+              <h3>Izin Staff</h3>
+              <p>Menyetujui Izin, Cuti, Dinas Dalam, Dinas Luar</p>
               <a className="dash-btn" href="/div-head-approval">Go</a>
             </div>
                         <div className="dash-card">
