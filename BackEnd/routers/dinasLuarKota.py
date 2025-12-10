@@ -91,7 +91,9 @@ def get_dinas_luar_by_division(db: Session = Depends(get_db), current_user=Depen
     if current_user.role != "div_head":
         raise HTTPException(403, "Division head only")
 
-    user_div = current_user.division
+    # HRD & GA gets to see all
+    if is_hrd_head(current_user):
+        return db.query(DinasLuarKota).order_by(DinasLuarKota.created_at.desc()).all()
 
     return db.query(DinasLuarKota)\
         .filter(DinasLuarKota.division == current_user.division)\

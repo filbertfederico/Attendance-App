@@ -75,7 +75,10 @@ async def get_all_private(current_user=Depends(get_current_user), db: Session = 
 def get_private_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     if current_user.role != "div_head":
         raise HTTPException(403, "Division head only")
-    user_div = current_user.division
+    
+    # HRD & GA gets to see all
+    if is_hrd_head(current_user):
+        return db.query(Pribadi).order_by(Pribadi.created_at.desc()).all()
 
     return db.query(Pribadi)\
         .filter(Pribadi.division == current_user.division)\

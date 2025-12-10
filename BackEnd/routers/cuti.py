@@ -80,10 +80,19 @@ def get_by_division(current_user: User = Depends(get_current_user), db: Session 
     if current_user.role not in ["div_head", "admin"]:
         raise HTTPException(403, "Division head only")
 
-    return db.query(Cuti)\
-        .filter(Cuti.division == current_user.division)\
-        .order_by(Cuti.created_at.desc())\
-        .all()
+    # HRD & GA division head sees ALL cuti across divisions
+    if is_hrd_head(current_user):
+        return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
+
+    # normal division head: only their division
+    if current_user.role == "div_head":
+        return db.query(Cuti).filter(
+            Cuti.division == current_user.division
+        ).order_by(Cuti.created_at.desc()).all()
+
+    # admin fallback
+    return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
+
 
 
 # ---------------------------------------------------------
@@ -104,7 +113,7 @@ def div_head_approve(id: int, current_user: User = Depends(get_current_user), db
     if not is_div_head_of_division(current_user, entry.division):
         raise HTTPException(403, "Not authorized")
 
-    # 🔥 SPECIAL CASE: HRD & GA HEAD
+    # HRD & GA HEAD
     if is_hrd_head(current_user):
         entry.approval_div_head = "approved"
         entry.approval_hrd = "approved"
