@@ -7,7 +7,7 @@ from BackEnd.database import get_db
 from BackEnd.models import Pribadi
 from .auth import get_current_user
 
-from .utils import is_div_head_of_division, is_hrd_head
+from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff
 
 router = APIRouter()
 
@@ -73,13 +73,17 @@ async def get_all_private(current_user=Depends(get_current_user), db: Session = 
 
 @router.get("/by-division")
 def get_private_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    
+    if is_hrd_staff(current_user):
+            return db.query(Pribadi).order_by(Pribadi.created_at.desc()).all()
+
+        
     if current_user.role != "div_head":
         raise HTTPException(403, "Division head only")
-    
-    # HRD & GA gets to see all
+
     if is_hrd_head(current_user):
         return db.query(Pribadi).order_by(Pribadi.created_at.desc()).all()
-
+    
     return db.query(Pribadi)\
         .filter(Pribadi.division == current_user.division)\
         .order_by(Pribadi.created_at.desc())\

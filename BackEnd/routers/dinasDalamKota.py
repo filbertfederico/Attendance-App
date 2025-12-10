@@ -8,7 +8,7 @@ from BackEnd.models import DinasDalamKota
 from BackEnd.database import get_db
 from .auth import get_current_user
 
-from .utils import is_div_head_of_division, is_hrd_head
+from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff
 
 router = APIRouter()
 
@@ -78,10 +78,13 @@ async def get_my_DinasDalamKota(
 
 @router.get("/by-division")
 def get_dinas_dalam_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    
+    if is_hrd_staff(current_user):
+        return db.query(DinasDalamKota).order_by(DinasDalamKota.created_at.desc()).all()
+        
     if current_user.role != "div_head":
         raise HTTPException(403, "Division head only")
 
-    # HRD & GA gets to see all
     if is_hrd_head(current_user):
         return db.query(DinasDalamKota).order_by(DinasDalamKota.created_at.desc()).all()
     

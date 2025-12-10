@@ -77,27 +77,27 @@ def get_my_cuti(current_user: User = Depends(get_current_user),
 @router.get("/by-division")
 def get_by_division(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
-    if current_user.role not in ["div_head", "admin"]:
-        raise HTTPException(403, "Division head only")
-    
-    # HRD & GA staff sees only approved cuti
+    # HRD & GA staff — allow early
     if is_hrd_staff(current_user):
-        return db.query(Cuti) \
-            .order_by(Cuti.created_at.desc()) \
-            .all()
+        return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
 
-    # HRD & GA division head sees ALL cuti across divisions
+    # HRD & GA division head
     if is_hrd_head(current_user):
         return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
 
-    # normal division head: only their division
+    # normal division head
     if current_user.role == "div_head":
         return db.query(Cuti).filter(
             Cuti.division == current_user.division
         ).order_by(Cuti.created_at.desc()).all()
 
-    # admin fallback
-    return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
+    # admin (lowest priority)
+    if current_user.role == "admin":
+        return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
+
+    # everything else forbidden
+    raise HTTPException(403, "Not authorized")
+
 
 
 

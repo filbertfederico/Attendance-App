@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import axios from "axios";
-import "./request.css";
+import "../styles/request.css";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 

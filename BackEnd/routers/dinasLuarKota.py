@@ -10,7 +10,7 @@ from .auth import get_current_user
 
 from .utils import is_hrd_head
 from .utils import is_finance_head
-from .utils import is_div_head_of_division
+from .utils import is_div_head_of_division, is_hrd_staff, is_hrd_head
 
 router = APIRouter()
 
@@ -85,16 +85,16 @@ async def get_all_luar_kota(
 
 
 @router.get("/by-division")
-def get_dinas_luar_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    div = current_user.division
-
+def get_dinas_luar_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):    
+    if is_hrd_staff(current_user):
+        return db.query(DinasLuarKota).order_by(DinasLuarKota.created_at.desc()).all()
+            
     if current_user.role != "div_head":
         raise HTTPException(403, "Division head only")
 
-    # HRD & GA gets to see all
     if is_hrd_head(current_user):
         return db.query(DinasLuarKota).order_by(DinasLuarKota.created_at.desc()).all()
-
+    
     return db.query(DinasLuarKota)\
         .filter(DinasLuarKota.division == current_user.division)\
         .order_by(DinasLuarKota.created_at.desc())\
