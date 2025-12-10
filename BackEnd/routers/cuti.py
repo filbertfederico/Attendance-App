@@ -1,5 +1,4 @@
 # BackEnd/routers/cuti.py
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -7,9 +6,9 @@ from datetime import datetime
 from BackEnd.database import get_db
 from BackEnd.models import Cuti, User
 from BackEnd.routers.auth import get_current_user
+from .utils import is_div_head_of_division, is_hrd_head
 
 router = APIRouter()
-
 
 # ---------------------------------------------------------
 # Helper: Check if user is division head of target division
@@ -19,7 +18,7 @@ def is_div_head_of_division(current_user: User, division: str):
 
 
 # ---------------------------------------------------------
-# CREATE CUTI REQUEST (Staff or Div Head)
+# CREATE CUTI REQUEST
 # ---------------------------------------------------------
 @router.post("/")
 def create_cuti(data: dict, 
@@ -63,99 +62,97 @@ def create_cuti(data: dict,
     db.add(entry)
     db.commit()
     db.refresh(entry)
-    return {"message": "Cuti request submitted", "id": entry.id}
+    return {"message": "Cuti submitted", "id": entry.id}
 
 
 # ---------------------------------------------------------
-# STAFF - GET MY CUTI REQUESTS
+# GET MY CUTI
 # ---------------------------------------------------------
 @router.get("/my")
 def get_my_cuti(current_user: User = Depends(get_current_user), 
                 db: Session = Depends(get_db)):
 
     return db.query(Cuti)\
-             .filter(Cuti.name == current_user.name)\
-             .order_by(Cuti.created_at.desc())\
-             .all()
+        .filter(Cuti.name == current_user.name)\
+        .order_by(Cuti.created_at.desc())\
+        .all()
 
 
 # ---------------------------------------------------------
-# DIV HEAD - GET REQUESTS BY DIVISION
+# GET CUTI BY DIVISION (DIV HEAD)
 # ---------------------------------------------------------
 @router.get("/by-division")
-def get_by_division(current_user: User = Depends(get_current_user), 
-                    db: Session = Depends(get_db)):
+def get_by_division(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
-    if current_user.role not in ["div_head", "admin"]:
-        raise HTTPException(403, "Not authorized")
+    if current_user.role != ["div_head", "admin"]:
+        raise HTTPException(403, "Division head only")
 
-    if current_user.role == "div_head":
-        return db.query(Cuti)\
+    return db.query(Cuti)\
         .filter(Cuti.division == current_user.division)\
         .order_by(Cuti.created_at.desc())\
         .all()
-    # Admin fallback (should not be used)
-    return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
 
 
 # ---------------------------------------------------------
-# DIV HEAD APPROVAL
+# DIVISION HEAD APPROVAL
 # ---------------------------------------------------------
 @router.put("/{id}/div-head-approve")
-def div_head_approve(id: int,
-                     current_user: User = Depends(get_current_user),
-                     db: Session = Depends(get_db)):
+def div_head_approve(id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
     entry = db.query(Cuti).filter(Cuti.id == id).first()
     if not entry:
-        raise HTTPException(404, "Cuti request not found")
+        raise HTTPException(404, "Not found")
 
-    if not is_div_head_of_division(current_user, entry.division):
-        raise HTTPException(403, "You are not the division head for this division")
-
+    # Not allowed to approve own form
     if entry.name == current_user.name:
         raise HTTPException(403, "You cannot approve your own request")
 
-    entry.approval_div_head = "approved"
-    entry.approval_status = "pending_hrd"
-    entry.approved_by = current_user.name
+    # Must be head of the correct division
+    if not is_div_head_of_division(current_user, entry.division):
+        raise HTTPException(403, "Not authorized")
+
+    # 🔥 SPECIAL CASE: HRD & GA HEAD
+    if is_hrd_head(current_user):
+        entry.approval_div_head = "approved"
+        entry.approval_hrd = "approved"
+        entry.approval_status = "approved"
+        entry.approved_by = current_user.name
+
+    else:
+        # Normal division head
+        entry.approval_div_head = "approved"
+        entry.approval_status = "pending_hrd"
+        entry.approved_by = current_user.name
 
     db.commit()
-    return {"message": "Div head approval completed"}
+    return {"message": "Division head approval completed"}
 
 
 # ---------------------------------------------------------
-# HRD APPROVAL (FINAL APPROVAL)
+# HRD FINAL APPROVAL (Only if NOT HRD div head)
 # ---------------------------------------------------------
-@router.put("/{id}/hrd-approve")
-def hrd_approve(id: int,
-                current_user: User = Depends(get_current_user),
-                db: Session = Depends(get_db)):
+def hrd_approve(id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
-    if current_user.division != "HRD & GA":
-        raise HTTPException(403, "Only HRD can approve this form")
+    if not is_hrd_head(current_user):
+        raise HTTPException(403, "HRD only")
 
     entry = db.query(Cuti).filter(Cuti.id == id).first()
     if not entry:
-        raise HTTPException(404, "Cuti request not found")
-
-    if entry.name == current_user.name:
-        raise HTTPException(403, "You cannot approve your own request")
+        raise HTTPException(404, "Not found")
 
     entry.approval_hrd = "approved"
     entry.approval_status = "approved"
     entry.approved_by = current_user.name
 
     db.commit()
-    return {"message": "Cuti request fully approved by HRD"}
+    return {"message": "Cuti approved by HRD"}
 
 
 # ---------------------------------------------------------
-# ADMIN - VIEW ALL CUTI
+# ADMIN GET ALL
 # ---------------------------------------------------------
 @router.get("/all")
-def admin_get_all(current_user: User = Depends(get_current_user), 
-                  db: Session = Depends(get_db)):
+def admin_all(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
     if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
