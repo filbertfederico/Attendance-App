@@ -216,7 +216,7 @@ export default function CutiRequest() {
           </div>
 
           {/* REMAINING DAYS */}
-          {/* <div className="cuti-row">
+          <div className="cuti-row">
             <label>Sisa Cuti</label>
             <span>:</span>
             <div className="cuti-duration-box">
@@ -229,7 +229,7 @@ export default function CutiRequest() {
               />
               <span> Hari</span>
             </div>
-          </div> */}
+          </div>
 
           <button className="cuti-submit-btn" onClick={submit}>
             Submit Cuti

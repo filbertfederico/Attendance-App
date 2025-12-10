@@ -91,11 +91,9 @@ def get_by_division(current_user: User = Depends(get_current_user),
 
     if current_user.role == "div_head":
         return db.query(Cuti)\
-            .filter(
-                Cuti.division == current_user.division,
-                Cuti.approval_div_head.is_(None)
-            ).order_by(Cuti.created_at.desc()).all()
-
+        .filter(Cuti.division == current_user.division)\
+        .order_by(Cuti.created_at.desc())\
+        .all()
     # Admin fallback (should not be used)
     return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
 
@@ -134,7 +132,7 @@ def hrd_approve(id: int,
                 current_user: User = Depends(get_current_user),
                 db: Session = Depends(get_db)):
 
-    if current_user.division != "HRD":
+    if current_user.division != "HRD & GA":
         raise HTTPException(403, "Only HRD can approve this form")
 
     entry = db.query(Cuti).filter(Cuti.id == id).first()

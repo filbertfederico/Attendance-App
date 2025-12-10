@@ -83,12 +83,10 @@ def get_dinas_dalam_by_division(db: Session = Depends(get_db), current_user=Depe
 
     user_div = current_user.division
 
-    return (
-        db.query(DinasDalamKota)
-        .filter(DinasDalamKota.division == user_div)
-        .filter(DinasDalamKota.approval_status == "pending")
+    return db.query(DinasDalamKota)\
+        .filter(DinasDalamKota.division == current_user.division)\
+        .order_by(DinasDalamKota.created_at.desc())\
         .all()
-    )
 
 
 @router.put("/{id}/div-head-approve")

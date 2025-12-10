@@ -77,12 +77,10 @@ def get_private_by_division(db: Session = Depends(get_db), current_user=Depends(
         raise HTTPException(403, "Division head only")
     user_div = current_user.division
 
-    return (
-        db.query(Pribadi)
-        .filter(Pribadi.division == user_div)
-        .filter(Pribadi.approval_status == "pending")
+    return db.query(Pribadi)\
+        .filter(Pribadi.division == current_user.division)\
+        .order_by(Pribadi.created_at.desc())\
         .all()
-    )
 
 @router.put("/{id}/div-head-approve")
 def approve_private(id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):

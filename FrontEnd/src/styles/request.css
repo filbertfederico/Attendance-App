@@ -132,3 +132,41 @@ h2 {
     width: 100%;
   }
 }
+
+.approve-btn,
+.deny-btn {
+  all: unset;              /* remove all browser default styles */
+  display: inline-block;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: 0.2s ease;
+  text-align: center;
+}
+
+/* APPROVE BUTTON */
+.approve-btn {
+  background: #4caf50;
+  color: white;
+  border-color: #449d48;
+}
+
+.approve-btn:hover {
+  background: #3e8e41;
+  border-color: #367c39;
+}
+
+/* DENY BUTTON */
+.deny-btn {
+  background: #d9534f;
+  color: white;
+  border-color: #c64542;
+}
+
+.deny-btn:hover {
+  background: #c9302c;
+  border-color: #b52b27;
+}

@@ -421,7 +421,7 @@ export default function MyRequest() {
                   <b>Catatan</b> <span>{c.notes}</span>
             
                   <b>Cuti Tersisa</b> <span>{c.leave_days ?? "-"}</span>
-                  <b>Cuti Setelah</b> <span>{c.leave_days != null ? c.leave_days - c.duration : "-"}</span>
+                  <b>Cuti Setelah</b> <span>{c.leave_remainder ?? "-"}</span>
             
                   <b>Status Kepala Divisi</b> <span>{c.approval_div_head || "—"}</span>
                   <b>Status HRD</b> <span>{c.approval_hrd || "—"}</span>
