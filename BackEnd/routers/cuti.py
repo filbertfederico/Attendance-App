@@ -11,13 +11,6 @@ from .utils import is_div_head_of_division, is_hrd_head
 router = APIRouter()
 
 # ---------------------------------------------------------
-# Helper: Check if user is division head of target division
-# ---------------------------------------------------------
-def is_div_head_of_division(current_user: User, division: str):
-    return current_user.role == "div_head" and current_user.division == division
-
-
-# ---------------------------------------------------------
 # CREATE CUTI REQUEST
 # ---------------------------------------------------------
 @router.post("/")
@@ -84,7 +77,7 @@ def get_my_cuti(current_user: User = Depends(get_current_user),
 @router.get("/by-division")
 def get_by_division(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
-    if current_user.role != ["div_head", "admin"]:
+    if current_user.role not in ["div_head", "admin"]:
         raise HTTPException(403, "Division head only")
 
     return db.query(Cuti)\
