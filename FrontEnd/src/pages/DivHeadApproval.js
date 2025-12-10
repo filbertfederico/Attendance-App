@@ -46,7 +46,7 @@ async function exportPDF(type, id, filename) {
   if (!el) return;
 
   const clone = el.cloneNode(true);
-  clone.querySelectorAll(".pdf-btn").forEach((b) => b.remove());
+  clone.querySelectorAll(".pdf-btn",".approve-btn",".deny-btn").forEach((b) => b.remove());
 
   const container = document.createElement("div");
   container.style.position = "fixed";
@@ -113,50 +113,75 @@ export default function DivHeadApproval() {
   // -----------------------------------------
   // Permissions
   // -----------------------------------------
-  async function canApprove(r) {
+  function canApprove(r) {
     const role = localStorage.getItem("role");
     const division = localStorage.getItem("division")?.toUpperCase();
 
     const isDivHead = role === "div_head";
     const isHRDHead = isDivHead && division === "HRD & GA";
 
-    // 1. Division Head Approval Stage
-    if (r.approval_div_head === "pending") {
-      // Only the div head of SAME division can approve
-      return isDivHead && r.division.toUpperCase() === division;
-    }
-
-    // 2. HRD Approval Stage
-    if (r.approval_hrd === "pending") {
-      // Only HRD & GA Head can approve
+    // ---------------------------
+    // 1️⃣ Stage 1 — Division Head Approval
+    // ---------------------------
+    if (r.approval_div_head == null && r.approval_status === "pending") {
+      // Normal division head must match division
+      if (!isHRDHead) {
+        return isDivHead && r.division.toUpperCase() === division;
+      }
+      // HRD head sees all
       return isHRDHead;
     }
 
-    // Otherwise no permission
+    // ---------------------------
+    // 2️⃣ Stage 2 — HRD Approval
+    // ---------------------------
+    if (
+      r.approval_div_head === "approved" &&
+      r.approval_hrd == null &&
+      r.approval_status === "pending_hrd"
+    ) {
+      return isHRDHead;
+    }
+
     return false;
   }
+
+
 
   // -----------------------------------------
   // Approval logic
   // -----------------------------------------
   async function doAction(item, action) {
-    if (!canApprove(item)) {
-      Swal.fire("Tidak Diizinkan", "Anda tidak boleh approve form ini", "error");
-      return;
+    const type = item._type;
+    const id = item.id;
+
+    let endpoint = "";
+
+    // CUTI has 2-stage approval
+    if (type === "cuti") {
+      // Stage 1
+      if (item.approval_div_head == null) {
+        endpoint = `/cuti/${id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
+      }
+      // Stage 2 (HRD)
+      else if (item.approval_div_head === "approved" && item.approval_hrd == null) {
+        endpoint = `/cuti/${id}/${action === "approve" ? "hrd-approve" : "hrd-deny"}`;
+      }
+    } 
+    else {
+      // Other forms are 1-stage only
+      const map = {
+        pribadi: "private",
+        cuti: "cuti",
+        dalam: "dinasDalamKota",
+        luar: "dinasLuarKota",
+      };
+      const base = map[type];
+      endpoint = `/${base}/${id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
     }
 
-    const map = {
-      pribadi: "private",
-      cuti: "cuti",
-      dalam: "dinasDalamKota",
-      luar: "dinasLuarKota",
-    };
-
-    const base = map[item._type];
-    const url = `/${base}/${item.id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
-
     try {
-      await api.put(url);
+      await api.put(endpoint);
       Swal.fire({
         icon: "success",
         title: action === "approve" ? "Approved" : "Rejected",
@@ -170,7 +195,7 @@ export default function DivHeadApproval() {
   }
 
   // -----------------------------------------
-  // Filter Logic (same as MyRequest)
+  // Filter Logic
   // -----------------------------------------
   function matchFilters(item) {
     const txt = search.toLowerCase();

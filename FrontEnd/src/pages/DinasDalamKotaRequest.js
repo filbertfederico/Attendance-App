@@ -4,6 +4,23 @@ import { api } from "../api/api";
 import "../styles/form.css";
 import Navbar from "../components/Navbar";
 import Swal from "sweetalert2";
+import Flatpickr from "react-flatpickr";
+import "flatpickr/dist/flatpickr.css";
+
+function formatDisplay(raw) {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (isNaN(d)) return raw;
+
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+
+  return `${dd}-${mm}-${yyyy} ${hh}:${min}`;
+}
+
 
 export default function DinasDalamKotaRequest() {
   const userName = localStorage.getItem("name");
@@ -101,21 +118,41 @@ export default function DinasDalamKotaRequest() {
           />
 
           <label>Waktu Berangkat:</label>
-          <input
-            type="datetime"
-            name="timeStart"
-            value={form.timeStart}
-            onChange={handleChange}
-            required
+          <Flatpickr
+            options={{
+              enableTime: true,
+              dateFormat: "d-m-Y H:i", 
+              altInput: true,
+              altFormat: "d-m-Y H:i",
+            }}
+            value={form.timeStart ? new Date(form.timeStart) : ""}
+            onChange={(selectedDates) => {
+              const date = selectedDates[0];
+              if (date) {
+                const formatted =
+                  date.toISOString().slice(0, 19).replace("T", " "); 
+                setForm({ ...form, timeStart: formatted });
+              }
+            }}
           />
 
-          <label>Waktu Selesai:</label>
-          <input
-            type="datetime"
-            name="timeEnd"
-            value={form.timeEnd}
-            onChange={handleChange}
-            required
+          <label>Waktu Kembali:</label>
+          <Flatpickr
+            options={{
+              enableTime: true,
+              dateFormat: "d-m-Y H:i", 
+              altInput: true,
+              altFormat: "d-m-Y H:i",
+            }}
+            value={form.timeEnd ? new Date(form.timeEnd) : ""}
+            onChange={(selectedDates) => {
+              const date = selectedDates[0];
+              if (date) {
+                const formatted =
+                  date.toISOString().slice(0, 19).replace("T", " "); 
+                setForm({ ...form, timeEnd: formatted });
+              }
+            }}
           />
 
           <label>Status:</label>

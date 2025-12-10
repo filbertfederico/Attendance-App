@@ -85,20 +85,24 @@ async def get_all_luar_kota(
 
 
 @router.get("/by-division")
-def get_dinas_luar_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):    
-    if is_hrd_staff(current_user):
-        return db.query(DinasLuarKota).order_by(DinasLuarKota.created_at.desc()).all()
-            
-    if current_user.role != "div_head":
-        raise HTTPException(403, "Division head only")
+def get_dinas_luar_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    if current_user.role not in ["div_head", "staff"]:
+        raise HTTPException(403, "Not allowed")
 
-    if is_hrd_head(current_user):
+    if is_hrd_head(current_user) or is_hrd_staff(current_user):
         return db.query(DinasLuarKota).order_by(DinasLuarKota.created_at.desc()).all()
-    
+
+    if current_user.role == "div_head":
+        return db.query(DinasLuarKota)\
+            .filter(DinasLuarKota.division == current_user.division)\
+            .order_by(DinasLuarKota.created_at.desc())\
+            .all()
+
     return db.query(DinasLuarKota)\
-        .filter(DinasLuarKota.division == current_user.division)\
+        .filter(DinasLuarKota.name == current_user.name)\
         .order_by(DinasLuarKota.created_at.desc())\
         .all()
+
 
 
 @router.put("/{id}/div-head-approve")

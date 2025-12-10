@@ -72,22 +72,24 @@ async def get_all_private(current_user=Depends(get_current_user), db: Session = 
     return db.query(Pribadi).all()
 
 @router.get("/by-division")
-def get_private_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    
-    if is_hrd_staff(current_user):
-            return db.query(Pribadi).order_by(Pribadi.created_at.desc()).all()
+def get_pribadi_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    if current_user.role not in ["div_head", "staff"]:
+        raise HTTPException(403, "Not allowed")
 
-        
-    if current_user.role != "div_head":
-        raise HTTPException(403, "Division head only")
-
-    if is_hrd_head(current_user):
+    if is_hrd_head(current_user) or is_hrd_staff(current_user):
         return db.query(Pribadi).order_by(Pribadi.created_at.desc()).all()
-    
+
+    if current_user.role == "div_head":
+        return db.query(Pribadi)\
+            .filter(Pribadi.division == current_user.division)\
+            .order_by(Pribadi.created_at.desc())\
+            .all()
+
     return db.query(Pribadi)\
-        .filter(Pribadi.division == current_user.division)\
+        .filter(Pribadi.name == current_user.name)\
         .order_by(Pribadi.created_at.desc())\
         .all()
+
 
 @router.put("/{id}/div-head-approve")
 def approve_private(id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
