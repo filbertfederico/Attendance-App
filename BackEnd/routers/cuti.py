@@ -10,6 +10,16 @@ from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff
 
 router = APIRouter()
 
+def parse_int_or_none(value):
+    if value is None:
+        return None
+    if value == "":
+        return None
+    try:
+        return int(value)
+    except:
+        return None
+
 # ---------------------------------------------------------
 # CREATE CUTI REQUEST
 # ---------------------------------------------------------
@@ -44,7 +54,7 @@ def create_cuti(data: dict,
         notes=data.get("notes"),
 
         leave_days=data.get("leave_days", 0),
-        leave_remaining=data.get("leave_remaining", 0),
+        leave_remaining=parse_int_or_none(data.get("leave_remaining", 0)),
 
         approval_status="pending",
         approval_div_head=None,
