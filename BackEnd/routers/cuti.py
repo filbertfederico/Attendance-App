@@ -114,41 +114,59 @@ def get_by_division(current_user: User = Depends(get_current_user), db: Session 
 # ---------------------------------------------------------
 # DIVISION HEAD APPROVAL
 # ---------------------------------------------------------
-@router.put("/{id}/div-head-approve")
-def div_head_approve(id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+@router.put("/{cuti_id}/div-head-approve")
+def div_head_approve(cuti_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
 
-    entry = db.query(Cuti).filter(Cuti.id == id).first()
-    if not entry:
+    form = db.query(Cuti).filter(Cuti.id == cuti_id).first()
+    if not form:
         raise HTTPException(404, "Not found")
 
-    # Not allowed to approve own form
-    if entry.name == current_user.name:
-        raise HTTPException(403, "You cannot approve your own request")
+    div = current_user.division.upper()
+    is_div_head = current_user.role == "div_head"
+    is_hrd_head = div == "HRD & GA"
 
-    # Must be head of the correct division
-    if not is_div_head_of_division(current_user, entry.division):
-        raise HTTPException(403, "Not authorized")
+    if not is_div_head:
+        raise HTTPException(403, "Only division heads may approve")
 
-    # HRD & GA HEAD
-    if is_hrd_head(current_user):
-        entry.approval_div_head = "approved"
-        entry.approval_hrd = "approved"
-        entry.approval_status = "approved"
-        entry.approved_by = current_user.name
+    # --------------------------
+    # Stage 1: Division approval
+    # --------------------------
+    if form.approval_div_head == "pending":
 
-    else:
-        # Normal division head
-        entry.approval_div_head = "approved"
-        entry.approval_status = "pending_hrd"
-        entry.approved_by = current_user.name
+        # Normal division head must match division
+        if not is_hrd_head and div != form.division.upper():
+            raise HTTPException(403, "Not your division")
+
+        form.approval_div_head = "approved"
+
+        # If HRD head approves, they ALSO approve HRD stage immediately
+        if is_hrd_head:
+            form.approval_hrd = "approved"
+            form.approval_status = "approved"
+        else:
+            form.approval_status = "pending_hrd"
+
+    # --------------------------
+    # Stage 2: HRD approval
+    # --------------------------
+    elif form.approval_hrd == "pending":
+
+        if not is_hrd_head:
+            raise HTTPException(403, "Only HRD & GA Head may approve this stage")
+
+        form.approval_hrd = "approved"
+        form.approval_status = "approved"
 
     db.commit()
-    return {"message": "Division head approval completed"}
+    db.refresh(form)
+    return form
+
 
 
 # ---------------------------------------------------------
 # HRD FINAL APPROVAL (Only if NOT HRD div head)
 # ---------------------------------------------------------
+@router.put("/{id}/hrd-approve")
 def hrd_approve(id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
     if not is_hrd_head(current_user):
@@ -158,12 +176,16 @@ def hrd_approve(id: int, current_user: User = Depends(get_current_user), db: Ses
     if not entry:
         raise HTTPException(404, "Not found")
 
+    if entry.approval_div_head != "approved":
+        raise HTTPException(403, "Waiting for division head approval")
+
     entry.approval_hrd = "approved"
     entry.approval_status = "approved"
     entry.approved_by = current_user.name
 
     db.commit()
     return {"message": "Cuti approved by HRD"}
+
 
 
 # ---------------------------------------------------------

@@ -21,8 +21,7 @@ function formatReadableDateTime(raw) {
   return (
     `${day}, ${date.getDate()} ` +
     date.toLocaleDateString("id-ID", { month: "long" }) +
-    ` ${date.getFullYear()} — ` +
-    date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+    ` ${date.getFullYear()} — `
   );
 }
 
@@ -114,9 +113,27 @@ export default function DivHeadApproval() {
   // -----------------------------------------
   // Permissions
   // -----------------------------------------
-  function canApprove(item) {
-    if (isHRD) return true;
-    return item.division === userDivision;
+  async function canApprove(r) {
+    const role = localStorage.getItem("role");
+    const division = localStorage.getItem("division")?.toUpperCase();
+
+    const isDivHead = role === "div_head";
+    const isHRDHead = isDivHead && division === "HRD & GA";
+
+    // 1. Division Head Approval Stage
+    if (r.approval_div_head === "pending") {
+      // Only the div head of SAME division can approve
+      return isDivHead && r.division.toUpperCase() === division;
+    }
+
+    // 2. HRD Approval Stage
+    if (r.approval_hrd === "pending") {
+      // Only HRD & GA Head can approve
+      return isHRDHead;
+    }
+
+    // Otherwise no permission
+    return false;
   }
 
   // -----------------------------------------
@@ -251,7 +268,7 @@ export default function DivHeadApproval() {
                     <b>No. Telp</b> <span>{r.phone}</span>
                     <b>Catatan</b> <span>{r.notes}</span>
                     <b>Cuti Tersisa</b> <span>{r.leave_days}</span>
-                    <b>Sisa Setelah</b> <span>{r.leave_remaining}</span>
+                    <b>Sisa Setelah</b> <span>{r.leave_days - r.duration}</span>
                   </>
                 )}
 
