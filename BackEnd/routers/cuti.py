@@ -57,8 +57,8 @@ def create_cuti(data: dict,
         leave_remaining=parse_int_or_none(data.get("leave_remaining", 0)),
 
         approval_status="pending",
-        approval_div_head=None,
-        approval_hrd=None,
+        approval_div_head="pending",
+        approval_hrd="pending",
         approved_by=None
     )
 
@@ -87,15 +87,11 @@ def get_my_cuti(current_user: User = Depends(get_current_user),
 @router.get("/by-division")
 def get_by_division(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
-    # HRD & GA staff — allow early
-    if is_hrd_staff(current_user):
-        return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
-
-    # HRD & GA division head
+    # HRD head sees all
     if is_hrd_head(current_user):
         return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
 
-    # normal division head
+    # Division head
     if current_user.role == "div_head":
         return db.query(Cuti).filter(
             Cuti.division == current_user.division
@@ -109,82 +105,107 @@ def get_by_division(current_user: User = Depends(get_current_user), db: Session 
     raise HTTPException(403, "Not authorized")
 
 
-
-
 # ---------------------------------------------------------
 # DIVISION HEAD APPROVAL
 # ---------------------------------------------------------
 @router.put("/{cuti_id}/div-head-approve")
-def div_head_approve(cuti_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def div_head_approve(cuti_id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
 
     form = db.query(Cuti).filter(Cuti.id == cuti_id).first()
     if not form:
         raise HTTPException(404, "Not found")
 
-    div = current_user.division.upper()
-    is_div_head = current_user.role == "div_head"
-    is_hrd_head = div == "HRD & GA"
+    # Only division head OR HRD division head can approve
+    if current_user.role != "div_head":
+        raise HTTPException(403, "You are not division head")
 
-    if not is_div_head:
-        raise HTTPException(403, "Only division heads may approve")
+    # Normal division head must match division
+    if not is_hrd_head(current_user) and current_user.division.upper() != form.division.upper():
+        raise HTTPException(403, "Not your division")
 
-    # --------------------------
-    # Stage 1: Division approval
-    # --------------------------
-    if form.approval_div_head == "pending":
+    # Stage already completed
+    if form.approval_div_head is not None:
+        raise HTTPException(400, "Division head already processed")
 
-        # Normal division head must match division
-        if not is_hrd_head and div != form.division.upper():
-            raise HTTPException(403, "Not your division")
+    # Approve stage 1
+    form.approval_div_head = "approved"
 
-        form.approval_div_head = "approved"
-
-        # If HRD head approves, they ALSO approve HRD stage immediately
-        if is_hrd_head:
-            form.approval_hrd = "approved"
-            form.approval_status = "approved"
-        else:
-            form.approval_status = "pending_hrd"
-
-    # --------------------------
-    # Stage 2: HRD approval
-    # --------------------------
-    elif form.approval_hrd == "pending":
-
-        if not is_hrd_head:
-            raise HTTPException(403, "Only HRD & GA Head may approve this stage")
-
+    # HRD head can auto-complete both stages for HRD employees
+    if is_hrd_head(current_user):
         form.approval_hrd = "approved"
         form.approval_status = "approved"
+    else:
+        form.approval_status = "pending_hrd"
 
     db.commit()
     db.refresh(form)
     return form
 
 
+@router.put("/{cuti_id}/div-head-deny")
+def div_head_deny(cuti_id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
 
-# ---------------------------------------------------------
-# HRD FINAL APPROVAL (Only if NOT HRD div head)
-# ---------------------------------------------------------
-@router.put("/{id}/hrd-approve")
-def hrd_approve(id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-
-    if not is_hrd_head(current_user):
-        raise HTTPException(403, "HRD only")
-
-    entry = db.query(Cuti).filter(Cuti.id == id).first()
-    if not entry:
+    form = db.query(Cuti).filter(Cuti.id == cuti_id).first()
+    if not form:
         raise HTTPException(404, "Not found")
 
-    if entry.approval_div_head != "approved":
-        raise HTTPException(403, "Waiting for division head approval")
+    if current_user.role != "div_head":
+        raise HTTPException(403, "You are not division head")
 
-    entry.approval_hrd = "approved"
-    entry.approval_status = "approved"
-    entry.approved_by = current_user.name
+    if not is_hrd_head(current_user) and current_user.division.upper() != form.division.upper():
+        raise HTTPException(403, "Not your division")
+
+    form.approval_div_head = "rejected"
+    form.approval_status = "rejected"
+    form.approved_by = current_user.name
 
     db.commit()
-    return {"message": "Cuti approved by HRD"}
+    return form
+
+
+
+# ---------------------------------------------------------
+# HRD APPROVAL
+# ---------------------------------------------------------
+@router.put("/{cuti_id}/hrd-approve")
+def hrd_approve(cuti_id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+
+    if not is_hrd_head(current_user):
+        raise HTTPException(403, "Only HRD head can approve")
+
+    form = db.query(Cuti).filter(Cuti.id == cuti_id).first()
+    if not form:
+        raise HTTPException(404, "Not found")
+
+    if form.approval_div_head != "approved":
+        raise HTTPException(403, "Waiting for division head approval")
+
+    if form.approval_hrd is not None:
+        raise HTTPException(400, "HRD already processed")
+
+    form.approval_hrd = "approved"
+    form.approval_status = "approved"
+    form.approved_by = current_user.name
+    db.commit()
+    return form
+
+
+@router.put("/{cuti_id}/hrd-deny")
+def hrd_deny(cuti_id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+
+    if not is_hrd_head(current_user):
+        raise HTTPException(403, "Only HRD head can deny")
+
+    form = db.query(Cuti).filter(Cuti.id == cuti_id).first()
+    if not form:
+        raise HTTPException(404, "Not found")
+
+    form.approval_hrd = "rejected"
+    form.approval_status = "rejected"
+    form.approved_by = current_user.name
+
+    db.commit()
+    return form
 
 
 

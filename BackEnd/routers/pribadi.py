@@ -98,11 +98,18 @@ def approve_private(id: int, db: Session = Depends(get_db), current_user=Depends
         raise HTTPException(404, "Request not found")
 
     if not is_div_head_of_division(current_user, req.division):
-        raise HTTPException(403, "Not authorized to approve this")
+        raise HTTPException(403, "Not authorized")
+
+    if req.approval_div_head is not None:
+        raise HTTPException(400, "Already processed")
 
     req.approval_div_head = "approved"
+    req.approval_status = "approved"     # 🔥 FIX
+    req.approved_by = current_user.name
+
     db.commit()
-    return {"message": "Division head approved"}
+    db.refresh(req)
+    return req
 
 @router.put("/{id}/div-head-deny")
 def deny_private(id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
@@ -113,11 +120,12 @@ def deny_private(id: int, db: Session = Depends(get_db), current_user=Depends(ge
     if not is_div_head_of_division(current_user, req.division):
         raise HTTPException(403, "Not authorized")
 
-    req.approval_status = "rejected"
     req.approval_div_head = "rejected"
+    req.approval_status = "rejected"
     req.approved_by = current_user.name
+
     db.commit()
-    return {"message": "Division head denied"}
+    return req
 
 @router.put("/{id}/approve")
 async def approve_private_admin(id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):

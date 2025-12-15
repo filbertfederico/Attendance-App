@@ -120,31 +120,38 @@ export default function DivHeadApproval() {
     const isDivHead = role === "div_head";
     const isHRDHead = isDivHead && division === "HRD & GA";
 
-    // ---------------------------
-    // 1️⃣ Stage 1 — Division Head Approval
-    // ---------------------------
-    if (r.approval_div_head == null && r.approval_status === "pending") {
-      // Normal division head must match division
-      if (!isHRDHead) {
-        return isDivHead && r.division.toUpperCase() === division;
+    // ------------------
+    // CUTI — Stage 1
+    // ------------------
+    if (r._type === "cuti") {
+      if (r.approval_div_head == null) {
+        if (!isHRDHead) {
+          return isDivHead && r.division?.toUpperCase() === division;
+        }
+        return isHRDHead;
       }
-      // HRD head sees all
-      return isHRDHead;
+
+      // CUTI — Stage 2 (HRD)
+      if (
+        r.approval_div_head === "approved" &&
+        r.approval_hrd == null
+      ) {
+        return isHRDHead;
+      }
+
+      return false;
     }
 
-    // ---------------------------
-    // 2️⃣ Stage 2 — HRD Approval
-    // ---------------------------
-    if (
-      r.approval_div_head === "approved" &&
-      r.approval_hrd == null &&
-      r.approval_status === "pending_hrd"
-    ) {
-      return isHRDHead;
-    }
-
-    return false;
+    // ------------------
+    // NON-CUTI (1-stage)
+    // ------------------
+    return (
+      isDivHead &&
+      r.approval_div_head == null &&
+      r.division?.toUpperCase() === division
+    );
   }
+
 
 
 

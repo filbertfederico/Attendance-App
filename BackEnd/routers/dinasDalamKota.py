@@ -109,9 +109,16 @@ def approve_dinas_dalam(id: int, db: Session = Depends(get_db), current_user=Dep
     if not is_div_head_of_division(current_user, req.division):
         raise HTTPException(403, "Not authorized")
 
+    if req.approval_div_head is not None:
+        raise HTTPException(400, "Already processed")
+
     req.approval_div_head = "approved"
+    req.approval_status = "approved"   # 🔥 FIX
+    req.approved_by = current_user.name
+
     db.commit()
-    return {"message": "Division head approved"}
+    db.refresh(req)
+    return req
 
 
 @router.put("/{id}/div-head-deny")
@@ -123,11 +130,12 @@ def deny_dinas_dalam(id: int, db: Session = Depends(get_db), current_user=Depend
     if not is_div_head_of_division(current_user, req.division):
         raise HTTPException(403, "Not authorized")
 
-    req.approval_status = "rejected"
     req.approval_div_head = "rejected"
+    req.approval_status = "rejected"
     req.approved_by = current_user.name
+
     db.commit()
-    return {"message": "Request rejected"}
+    return req
 
 
 @router.put("/{id}/approve")
