@@ -40,8 +40,8 @@ async def create_DinasDalamKota(
         raise HTTPException(400, "Invalid datetime format")
 
     entry = DinasDalamKota(
-        name=data.name,
-        division=data.division,
+        name=current_user.name,         
+        division=current_user.division, 
         purpose=data.purpose,
         time_start=start_dt,
         time_end=end_dt,
@@ -54,7 +54,6 @@ async def create_DinasDalamKota(
     db.refresh(entry)
 
     return {"message": "Request saved", "id": entry.id}
-
 
 @router.get("/")
 async def get_all_DinasDalamKota(

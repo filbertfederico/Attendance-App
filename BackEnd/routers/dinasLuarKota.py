@@ -43,8 +43,8 @@ async def create_dinas_luar_kota(
     db: Session = Depends(get_db)
 ):
     entry = DinasLuarKota(
-        name=data.name,
-        division=data.division,
+        name=current_user.name,
+        division=current_user.division,
         destination=data.destination,
         purpose=data.purpose,
         needs=data.needs,
@@ -92,6 +92,7 @@ def get_dinas_luar_by_division(
 ):
     role = (current_user.role or "").lower()
     division = (current_user.division or "").upper()
+    print("ROLE:", role, "DIV:", division)
 
     if role not in ["div_head", "staff"]:
         raise HTTPException(403, "Not allowed")
@@ -102,14 +103,14 @@ def get_dinas_luar_by_division(
             .order_by(DinasLuarKota.created_at.desc())\
             .all()
 
-    # Division head sees their division
+    # DIVISION HEAD sees own division
     if role == "div_head":
         return db.query(DinasLuarKota)\
             .filter(func.upper(DinasLuarKota.division) == division)\
             .order_by(DinasLuarKota.created_at.desc())\
             .all()
 
-    # Staff sees own
+    # STAFF sees own
     return db.query(DinasLuarKota)\
         .filter(DinasLuarKota.name == current_user.name)\
         .order_by(DinasLuarKota.created_at.desc())\
