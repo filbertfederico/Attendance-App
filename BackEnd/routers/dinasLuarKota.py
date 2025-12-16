@@ -1,6 +1,7 @@
 # BackEnd/routers/dinasLuarKota.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func 
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -94,7 +95,7 @@ def get_dinas_luar_by_division(db: Session = Depends(get_db), current_user=Depen
 
     if current_user.role == "div_head":
         return db.query(DinasLuarKota)\
-            .filter(DinasLuarKota.division == current_user.division)\
+            .filter(func.upper(DinasLuarKota.division) == current_user.division.upper())\
             .order_by(DinasLuarKota.created_at.desc())\
             .all()
 
@@ -102,7 +103,6 @@ def get_dinas_luar_by_division(db: Session = Depends(get_db), current_user=Depen
         .filter(DinasLuarKota.name == current_user.name)\
         .order_by(DinasLuarKota.created_at.desc())\
         .all()
-
 
 
 @router.put("/{id}/div-head-approve")
