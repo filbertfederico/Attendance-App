@@ -12,10 +12,8 @@ from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff
 router = APIRouter()
 
 class PribadiRequest(BaseModel):
-    name: str
     title: str
     requestType: str
-    division: str
     date: str | None = None
     shortHour: str | None = None
     comeLateDate: str | None = None
@@ -42,9 +40,9 @@ def parse_time(value):
 @router.post("/")
 async def create_private(data: PribadiRequest, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     entry = Pribadi(
-        name=data.name,
+        name=current_user.name,
         title=data.title,
-        division=data.division,
+        division=current_user.division,
         request_type=data.requestType,
         day_label=data.date,
         date=parse_date(data.date),
@@ -56,6 +54,7 @@ async def create_private(data: PribadiRequest, current_user=Depends(get_current_
         temp_leave_end=parse_date(data.tempLeaveEnd),
         approval_status="pending"
     )
+
     db.add(entry)
     db.commit()
     db.refresh(entry)
@@ -72,23 +71,37 @@ async def get_all_private(current_user=Depends(get_current_user), db: Session = 
     return db.query(Pribadi).all()
 
 @router.get("/by-division")
-def get_pribadi_by_division(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    if current_user.role not in ["div_head", "staff"]:
-        raise HTTPException(403, "Not allowed")
+def get_by_division(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    role = (current_user.role or "").lower()
+    division = (current_user.division or "").upper()
 
+    # ✅ HRD (STAFF + DIV HEAD) SEE EVERYTHING
     if is_hrd_head(current_user) or is_hrd_staff(current_user):
-        return db.query(Pribadi).order_by(Pribadi.created_at.desc()).all()
-
-    if current_user.role == "div_head":
-        return db.query(Pribadi)\
-            .filter(Pribadi.division == current_user.division)\
-            .order_by(Pribadi.created_at.desc())\
+        return (
+            db.query(Pribadi)   # ← replace Pribadi per file
+            .order_by(Pribadi.created_at.desc())
             .all()
+        )
 
-    return db.query(Pribadi)\
-        .filter(Pribadi.name == current_user.name)\
-        .order_by(Pribadi.created_at.desc())\
+    # ✅ DIV HEAD sees own division
+    if role == "div_head":
+        return (
+            db.query(Pribadi)
+            .filter(Pribadi.division == division)
+            .order_by(Pribadi.created_at.desc())
+            .all()
+        )
+
+    # ✅ STAFF sees own only
+    return (
+        db.query(Pribadi)
+        .filter(Pribadi.name == current_user.name)
+        .order_by(Pribadi.created_at.desc())
         .all()
+    )
 
 
 @router.put("/{id}/div-head-approve")

@@ -85,25 +85,37 @@ def get_my_cuti(current_user: User = Depends(get_current_user),
 # GET CUTI BY DIVISION (DIV HEAD)
 # ---------------------------------------------------------
 @router.get("/by-division")
-def get_by_division(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_by_division(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    role = (current_user.role or "").lower()
+    division = (current_user.division or "").upper()
 
-    # HRD head sees all
-    if is_hrd_head(current_user):
-        return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
+    # ✅ HRD (STAFF + DIV HEAD) SEE EVERYTHING
+    if is_hrd_head(current_user) or is_hrd_staff(current_user):
+        return (
+            db.query(Cuti)   # ← replace Cuti per file
+            .order_by(Cuti.created_at.desc())
+            .all()
+        )
 
-    # Division head
-    if current_user.role == "div_head":
-        return db.query(Cuti).filter(
-            Cuti.division == current_user.division
-        ).order_by(Cuti.created_at.desc()).all()
+    # ✅ DIV HEAD sees own division
+    if role == "div_head":
+        return (
+            db.query(Cuti)
+            .filter(Cuti.division == division)
+            .order_by(Cuti.created_at.desc())
+            .all()
+        )
 
-    # admin (lowest priority)
-    if current_user.role == "admin":
-        return db.query(Cuti).order_by(Cuti.created_at.desc()).all()
-
-    # everything else forbidden
-    raise HTTPException(403, "Not authorized")
-
+    # ✅ STAFF sees own only
+    return (
+        db.query(Cuti)
+        .filter(Cuti.name == current_user.name)
+        .order_by(Cuti.created_at.desc())
+        .all()
+    )
 
 # ---------------------------------------------------------
 # DIVISION HEAD APPROVAL

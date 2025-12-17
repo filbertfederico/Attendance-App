@@ -86,35 +86,37 @@ async def get_all_luar_kota(
 
 
 @router.get("/by-division")
-def get_dinas_luar_by_division(
+def get_by_division(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
     role = (current_user.role or "").lower()
     division = (current_user.division or "").upper()
-    print("ROLE:", role, "DIV:", division)
 
-    if role not in ["div_head", "staff"]:
-        raise HTTPException(403, "Not allowed")
-
-    # HRD sees all
+    # ✅ HRD (STAFF + DIV HEAD) SEE EVERYTHING
     if is_hrd_head(current_user) or is_hrd_staff(current_user):
-        return db.query(DinasLuarKota)\
-            .order_by(DinasLuarKota.created_at.desc())\
+        return (
+            db.query(DinasLuarKota)   # ← replace DinasLuarKota per file
+            .order_by(DinasLuarKota.created_at.desc())
             .all()
+        )
 
-    # DIVISION HEAD sees own division
+    # ✅ DIV HEAD sees own division
     if role == "div_head":
-        return db.query(DinasLuarKota)\
-            .filter(func.upper(DinasLuarKota.division) == division)\
-            .order_by(DinasLuarKota.created_at.desc())\
+        return (
+            db.query(DinasLuarKota)
+            .filter(DinasLuarKota.division == division)
+            .order_by(DinasLuarKota.created_at.desc())
             .all()
+        )
 
-    # STAFF sees own
-    return db.query(DinasLuarKota)\
-        .filter(DinasLuarKota.name == current_user.name)\
-        .order_by(DinasLuarKota.created_at.desc())\
+    # ✅ STAFF sees own only
+    return (
+        db.query(DinasLuarKota)
+        .filter(DinasLuarKota.name == current_user.name)
+        .order_by(DinasLuarKota.created_at.desc())
         .all()
+    )
 
 @router.put("/{id}/div-head-approve")
 def approve_dinas_luar(id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):

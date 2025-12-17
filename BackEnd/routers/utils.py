@@ -1,15 +1,23 @@
 # BackEnd/routers/utils.py
 
+def _role(user):
+    return (user.role or "").lower()
+
+def _division(user):
+    return (user.division or "").upper()
+
+
 def is_div_head_of_division(user, division: str) -> bool:
-    return user.role == "div_head" and user.division.upper() == division.upper()
+    return _role(user) == "div_head" and _division(user) == division.upper()
 
 
 def is_hrd_head(user) -> bool:
-    return user.role == "div_head" and user.division.upper() == "HRD & GA"
+    return _role(user) == "div_head" and _division(user) == "HRD & GA"
+
+
+def is_hrd_staff(user) -> bool:
+    return _role(user) == "staff" and _division(user) == "HRD & GA"
 
 
 def is_finance_head(user) -> bool:
-    return user.role == "div_head" and user.division.upper() == "FINANCE"
-
-def is_hrd_staff(user) -> bool:
-    return user.role == "staff" and user.division.upper() == "HRD & GA"
+    return _role(user) == "div_head" and _division(user) == "FINANCE"
