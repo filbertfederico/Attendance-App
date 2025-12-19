@@ -130,6 +130,24 @@ def approve_dinas_dalam(id: int, db: Session = Depends(get_db), current_user=Dep
     db.refresh(req)
     return req
 
+@router.put("/{id}/hrd-approve")
+def hrd_approve_dinas_dalam(id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    if not is_hrd_head(current_user):
+        raise HTTPException(403, "HRD head only")
+
+    req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
+    if not req:
+        raise HTTPException(404, "Not found")
+
+    if req.approval_div_head != "approved":
+        raise HTTPException(403, "Waiting for div head")
+
+    req.approval_hrd = "approved"
+    req.approval_status = "approved"
+    req.approved_by = current_user.name
+
+    db.commit()
+    return req
 
 @router.put("/{id}/div-head-deny")
 def deny_dinas_dalam(id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
