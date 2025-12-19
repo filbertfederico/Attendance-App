@@ -137,11 +137,11 @@ def approve_dinas_luar(id: int, db: Session = Depends(get_db), current_user=Depe
     return req
 
 @router.put("/{id}/hrd-approve")
-def hrd_approve_dinas_dalam(id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+def hrd_approve_dinas_luar(id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     if not is_hrd_head(current_user):
         raise HTTPException(403, "HRD head only")
 
-    req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
+    req = db.query(DinasLuarKota).filter(DinasLuarKota.id == id).first()
     if not req:
         raise HTTPException(404, "Not found")
 
