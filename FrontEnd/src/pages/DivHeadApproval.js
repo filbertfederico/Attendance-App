@@ -1,5 +1,3 @@
-// FrontEnd/src/pages/DivHeadApproval.js
-
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import { api } from "../api/api";
@@ -38,7 +36,7 @@ function formatTime(t) {
 }
 
 // -------------------------
-// PDF Export (same as MyRequest)
+// PDF Export
 // -------------------------
 async function exportPDF(type, id, filename) {
   const selector = `.request-card[data-type="${type}"][data-id="${id}"]`;
@@ -46,7 +44,9 @@ async function exportPDF(type, id, filename) {
   if (!el) return;
 
   const clone = el.cloneNode(true);
-  clone.querySelectorAll(".pdf-btn",".approve-btn",".deny-btn").forEach((b) => b.remove());
+  clone
+    .querySelectorAll(".pdf-btn", ".approve-btn", ".deny-btn")
+    .forEach((b) => b.remove());
 
   const container = document.createElement("div");
   container.style.position = "fixed";
@@ -72,17 +72,15 @@ async function exportPDF(type, id, filename) {
 export default function DivHeadApproval() {
   const [requests, setRequests] = useState([]);
 
-  // Filters
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterType, setFilterType] = useState("");
 
   const userRole = localStorage.getItem("role");
   const userDivision = localStorage.getItem("division");
-  const isHRD = userDivision?.toUpperCase() === "HRD & GA";
 
   // -----------------------------------------
-  // Load all forms filtered by division
+  // Load data
   // -----------------------------------------
   async function load() {
     try {
@@ -111,52 +109,60 @@ export default function DivHeadApproval() {
   }, []);
 
   // -----------------------------------------
-  // Permissions
+  // Permission Logic (FINAL, STABLE)
   // -----------------------------------------
   function canApprove(r) {
-    const role = localStorage.getItem("role");
-    const division = localStorage.getItem("division")?.toUpperCase();
+  if (!r) return false;
 
-    const isDivHead = role === "div_head";
-    const isHRDHead = isDivHead && division === "HRD & GA";
+  const role = (localStorage.getItem("role") || "").toLowerCase();
+  const division = (localStorage.getItem("division") || "").toUpperCase();
 
-    // ------------------
-    // CUTI — Stage 1
-    // ------------------
-    if (r._type === "cuti") {
-      if (r.approval_div_head == null) {
-        if (!isHRDHead) {
-          return isDivHead && r.division?.toUpperCase() === division;
-        }
-        return isHRDHead;
-      }
+  // -----------------------------
+  // ADMIN
+  // -----------------------------
+  if (role === "admin") return true;
 
-      // CUTI — Stage 2 (HRD)
-      if (
-        r.approval_div_head === "approved" &&
-        r.approval_hrd == null
-      ) {
-        return isHRDHead;
-      }
-
-      return false;
-    }
-
-    // ------------------
-    // NON-CUTI (1-stage)
-    // ------------------
+  // -----------------------------
+  // HRD HEAD (Div Head HRD & GA)
+  // -----------------------------
+  if (role === "div_head" && division === "HRD & GA") {
     return (
-      isDivHead &&
-      r.approval_div_head == null &&
-      r.division?.toUpperCase() === division
+      r.approval_status === "pending" ||
+      r.approval_status === "pending_hrd"
     );
   }
 
+  // -----------------------------
+  // FINANCE HEAD
+  // -----------------------------
+  if (role === "div_head" && division === "FINANCE") {
+    return r.approval_status === "pending_finance";
+  }
+
+  // -----------------------------
+  // NORMAL DIVISION HEAD
+  // -----------------------------
+  if (role === "div_head") {
+    return (
+      r.division?.toUpperCase() === division &&
+      r.approval_status === "pending"
+    );
+  }
+
+  // -----------------------------
+  // HRD STAFF (VIEW ONLY)
+  // -----------------------------
+  if (role === "staff" && division === "HRD & GA") {
+    return false;
+  }
+
+  return false;
+}
 
 
 
   // -----------------------------------------
-  // Approval logic
+  // Approve / Reject handler (FIXED)
   // -----------------------------------------
   async function doAction(item, action) {
     const type = item._type;
@@ -164,27 +170,26 @@ export default function DivHeadApproval() {
 
     let endpoint = "";
 
-    // CUTI has 2-stage approval
     if (type === "cuti") {
-      // Stage 1
       if (item.approval_div_head == null) {
         endpoint = `/cuti/${id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
-      }
-      // Stage 2 (HRD)
-      else if (item.approval_div_head === "approved" && item.approval_hrd == null) {
+      } else if (item.approval_div_head === "approved" && item.approval_hrd == null) {
         endpoint = `/cuti/${id}/${action === "approve" ? "hrd-approve" : "hrd-deny"}`;
       }
-    } 
-    else {
-      // Other forms are 1-stage only
+    } else {
       const map = {
         pribadi: "private",
-        cuti: "cuti",
         dalam: "dinasDalamKota",
         luar: "dinasLuarKota",
       };
       const base = map[type];
       endpoint = `/${base}/${id}/${action === "approve" ? "div-head-approve" : "div-head-deny"}`;
+    }
+
+    // 🔒 Safety guard
+    if (!endpoint) {
+      Swal.fire("Error", "Invalid approval state", "error");
+      return;
     }
 
     try {
@@ -195,14 +200,15 @@ export default function DivHeadApproval() {
         timer: 1200,
         showConfirmButton: false,
       });
-      load();
     } catch (e) {
       Swal.fire("Error", e.response?.data?.detail ?? "Failed", "error");
+    } finally {
+      load(); // 🔥 ALWAYS refresh to avoid ghost buttons
     }
   }
 
   // -----------------------------------------
-  // Filter Logic
+  // Filters
   // -----------------------------------------
   function matchFilters(item) {
     const txt = search.toLowerCase();
@@ -223,7 +229,7 @@ export default function DivHeadApproval() {
   }
 
   // -----------------------------------------
-  // Component UI
+  // UI
   // -----------------------------------------
   return (
     <>
@@ -283,92 +289,10 @@ export default function DivHeadApproval() {
                 <div className="card-header-spacer"></div>
               </div>
 
-              {/* BODY TABLE */}
+              {/* BODY */}
               <div className="request-table">
                 <b>Nama</b> <span>{r.name}</span>
                 <b>Divisi</b> <span>{r.division}</span>
-
-                {/* ------------ CUTI ------------ */}
-                {r._type === "cuti" && (
-                  <>
-                    <b>Jenis Cuti</b> <span>{r.cuti_type}</span>
-                    <b>Mulai</b> <span>{formatReadableDateTime(r.date_start)}</span>
-                    <b>Selesai</b> <span>{formatReadableDateTime(r.date_end)}</span>
-                    <b>Durasi</b> <span>{r.duration} hari</span>
-                    <b>Keperluan</b> <span>{r.purpose}</span>
-                    <b>Alamat</b> <span>{r.address}</span>
-                    <b>No. Telp</b> <span>{r.phone}</span>
-                    <b>Catatan</b> <span>{r.notes}</span>
-                    <b>Cuti Tersisa</b> <span>{r.leave_days}</span>
-                    <b>Sisa Setelah</b> <span>{r.leave_days - r.duration}</span>
-                  </>
-                )}
-
-                {/* ------------ PRIBADI ------------ */}
-                {r._type === "pribadi" && (
-                  <>
-                    <b>Judul</b> <span>{r.title}</span>
-                    <b>Tipe</b> <span>{r.request_type}</span>
-
-                    {r.request_type === "time_off" && (
-                      <>
-                        <b>Tanggal</b> <span>{formatDate(r.date)}</span>
-                        <b>Hari</b> <span>{r.day_label ?? "-"}</span>
-                      </>
-                    )}
-
-                    {r.request_type === "leave_early" && (
-                      <>
-                        <b>Pulang Lebih Awal</b>
-                        <span>{formatTime(r.short_hour)}</span>
-                      </>
-                    )}
-
-                    {r.request_type === "come_late" && (
-                      <>
-                        <b>Hari</b> <span>{r.come_late_day ?? "-"}</span>
-                        <b>Tanggal</b> <span>{formatDate(r.come_late_date)}</span>
-                        <b>Jam Terlambat</b> <span>{formatTime(r.come_late_hour)}</span>
-                      </>
-                    )}
-
-                    {r.request_type === "temp_leave" && (
-                      <>
-                        <b>Mulai</b> <span>{formatReadableDateTime(r.temp_leave_start)}</span>
-                        <b>Sampai</b> <span>{formatReadableDateTime(r.temp_leave_end)}</span>
-                      </>
-                    )}
-
-                    <b>Catatan</b> <span>{r.notes ?? "-"}</span>
-                  </>
-                )}
-
-                {/* ------------ DINAS DALAM KOTA ------------ */}
-                {r._type === "dalam" && (
-                  <>
-                    <b>Tujuan</b> <span>{r.purpose}</span>
-                    <b>Waktu Mulai</b> <span>{formatReadableDateTime(r.time_start)}</span>
-                    <b>Waktu Selesai</b> <span>{formatReadableDateTime(r.time_end)}</span>
-                    <b>Status Form</b> <span>{r.status}</span>
-                    <b>Catatan</b> <span>{r.notes ?? "-"}</span>
-                  </>
-                )}
-
-                {/* ------------ DINAS LUAR KOTA ------------ */}
-                {r._type === "luar" && (
-                  <>
-                    <b>Tujuan</b> <span>{r.destination}</span>
-                    <b>Keperluan</b> <span>{r.purpose}</span>
-                    <b>Kebutuhan</b> <span>{r.needs ?? "-"}</span>
-                    <b>Pengikut</b> <span>{r.companions ?? "-"}</span>
-                    <b>Keperluan Pengikut</b> <span>{r.companion_purpose ?? "-"}</span>
-                    <b>Tanggal Berangkat</b> <span>{formatDate(r.depart_date)}</span>
-                    <b>Tanggal Kembali</b> <span>{formatDate(r.return_date)}</span>
-                    <b>Angkutan</b> <span>{r.transport_type}</span>
-                    <b>Barang Dibawa</b> <span>{r.items_brought ?? "-"}</span>
-                  </>
-                )}
-
                 <b>Dikumpulkan</b>
                 <span>{formatReadableDateTime(r.created_at)}</span>
               </div>
@@ -386,7 +310,7 @@ export default function DivHeadApproval() {
                 Status: {r.approval_status}
               </div>
 
-              {/* ACTION BUTTONS */}
+              {/* ACTIONS */}
               <div className="action-row">
                 <button
                   className="pdf-btn"

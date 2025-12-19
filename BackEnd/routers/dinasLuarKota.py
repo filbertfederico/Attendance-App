@@ -119,25 +119,32 @@ def get_by_division(
     )
 
 @router.put("/{id}/div-head-approve")
-def approve_dinas_luar(id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    req = db.query(DinasLuarKota).filter(DinasLuarKota.id == id).first()
-    if not req:
-        raise HTTPException(404, "Not found")
+def div_head_approve(id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
 
-    if not (
-        is_div_head_of_division(current_user, DinasDalamKota.division)
-        or is_hrd_head(current_user)
-    ):
-        raise HTTPException(403, "Not allowed")
+    if current_user.role != "div_head":
+        raise HTTPException(403, "Div head only")
 
-    if req.approval_div_head is not None:
-        raise HTTPException(400, "Already processed")
+    form = db.query(DinasLuarKota).get(id)
+    if not form:
+        raise HTTPException(404)
 
-    req.approval_div_head = "approved"
-    req.approval_status = "pending"        
+    # 🔑 HRD & GA div head can approve ALL
+    if is_hrd_head(current_user):
+        form.approval_div_head = "approved"
+        form.approval_hrd = "approved"
+        form.approval_status = "approved"
+        db.commit()
+        return {"message": "Approved by HRD & GA"}
+
+    # 🔒 Normal div head → only own division
+    if form.division != current_user.division:
+        raise HTTPException(403, "Not your division")
+
+    form.approval_div_head = "approved"
+    form.approval_status = "pending_hrd"
     db.commit()
-    db.refresh(req)
-    return req
+
+    return {"message": "Approved by div head"}
 
 @router.put("/{id}/hrd-approve")
 def hrd_approve_dinas_luar(id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):

@@ -118,41 +118,21 @@ export default function DinasDalamKotaRequest() {
           />
 
           <label>Waktu Berangkat:</label>
-          <Flatpickr
-            options={{
-              enableTime: true,
-              dateFormat: "d-m-Y H:i", 
-              altInput: true,
-              altFormat: "d-m-Y H:i",
-            }}
-            value={form.timeStart ? new Date(form.timeStart) : ""}
-            onChange={(selectedDates) => {
-              const date = selectedDates[0];
-              if (date) {
-                const formatted =
-                  date.toISOString().slice(0, 19).replace("T", " "); 
-                setForm({ ...form, timeStart: formatted });
-              }
-            }}
+          <input 
+            type="date"
+            name="timeStart"
+            value={form.timeStart}
+            onChange={handleChange}
+            required
           />
 
           <label>Waktu Kembali:</label>
-          <Flatpickr
-            options={{
-              enableTime: true,
-              dateFormat: "d-m-Y H:i", 
-              altInput: true,
-              altFormat: "d-m-Y H:i",
-            }}
-            value={form.timeEnd ? new Date(form.timeEnd) : ""}
-            onChange={(selectedDates) => {
-              const date = selectedDates[0];
-              if (date) {
-                const formatted =
-                  date.toISOString().slice(0, 19).replace("T", " "); 
-                setForm({ ...form, timeEnd: formatted });
-              }
-            }}
+          <input 
+            type="date"
+            name="timeEnd"
+            value={form.timeEnd}
+            onChange={handleChange}
+            required
           />
 
           <label>Status:</label>
