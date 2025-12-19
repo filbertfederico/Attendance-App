@@ -8,7 +8,11 @@ def _division(user):
 
 
 def is_div_head_of_division(user, division: str) -> bool:
-    return _role(user) == "div_head" and _division(user) == division.upper()
+    if not user.division or not division:
+        return False
+    return (
+        user.role == "div_head"
+        and user.division.strip().upper() == division.strip().upper())
 
 
 def is_hrd_head(user) -> bool:
