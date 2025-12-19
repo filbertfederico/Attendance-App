@@ -110,8 +110,11 @@ def approve_private(id: int, db: Session = Depends(get_db), current_user=Depends
     if not req:
         raise HTTPException(404, "Request not found")
 
-    if not is_div_head_of_division(current_user, req.division):
-        raise HTTPException(403, "Not authorized")
+    if not (
+        is_div_head_of_division(current_user, Pribadi.division)
+        or is_hrd_head(current_user)
+    ):
+        raise HTTPException(403, "Not allowed")
 
     if req.approval_div_head is not None:
         raise HTTPException(400, "Already processed")
@@ -149,9 +152,11 @@ def deny_private(id: int, db: Session = Depends(get_db), current_user=Depends(ge
     if not req:
         raise HTTPException(404, "Not found")
 
-    if not is_div_head_of_division(current_user, req.division):
-        raise HTTPException(403, "Not authorized")
-
+    if not (
+        is_div_head_of_division(current_user, Pribadi.division)
+        or is_hrd_head(current_user)
+    ):
+        raise HTTPException(403, "Not allowed")
     req.approval_div_head = "rejected"
     req.approval_status = "rejected"
     req.approved_by = current_user.name

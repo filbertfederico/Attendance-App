@@ -124,8 +124,11 @@ def approve_dinas_luar(id: int, db: Session = Depends(get_db), current_user=Depe
     if not req:
         raise HTTPException(404, "Not found")
 
-    if not is_div_head_of_division(current_user, req.division):
-        raise HTTPException(403, "Not authorized")
+    if not (
+        is_div_head_of_division(current_user, DinasDalamKota.division)
+        or is_hrd_head(current_user)
+    ):
+        raise HTTPException(403, "Not allowed")
 
     if req.approval_div_head is not None:
         raise HTTPException(400, "Already processed")
@@ -163,8 +166,11 @@ def deny_dinas_luar(id: int, db: Session = Depends(get_db), current_user=Depends
     if not req:
         raise HTTPException(404, "Not found")
 
-    if not is_div_head_of_division(current_user, req.division):
-        raise HTTPException(403, "Not authorized")
+    if not (
+        is_div_head_of_division(current_user, DinasLuarKota.division)
+        or is_hrd_head(current_user)
+    ):
+        raise HTTPException(403, "Not allowed")
 
     req.approval_div_head = "rejected"
     req.approval_status = "rejected"
