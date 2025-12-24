@@ -57,8 +57,8 @@ def create_cuti(data: dict,
         leave_remaining=parse_int_or_none(data.get("leave_remaining", 0)),
 
         approval_status="pending",
-        approval_div_head="pending",
-        approval_hrd="pending",
+        approval_div_head=None,
+        approval_hrd=None,
         approved_by=None
     )
 

@@ -24,14 +24,17 @@ h2 {
 }
 
 .card-header {
+  display: flex;
   text-align: center;
   margin-bottom: 25px;
+  justify-content: center;
 }
 
 .card-header h3 {
   margin: 0;
   font-size: 22px;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .header-sub {
@@ -49,6 +52,16 @@ h2 {
 
 .request-table b {
   font-weight: bold;
+}
+
+.request-table span {
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .request-table span {
+    white-space: normal;
+  }
 }
 
 /* Approval Status Styling */

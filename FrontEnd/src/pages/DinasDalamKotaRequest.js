@@ -119,16 +119,18 @@ export default function DinasDalamKotaRequest() {
 
           <label>Waktu Berangkat:</label>
           <input 
-            type="date"
+            type="datetime-local"
             name="timeStart"
             value={form.timeStart}
             onChange={handleChange}
             required
           />
 
+          
+
           <label>Waktu Kembali:</label>
           <input 
-            type="date"
+            type="datetime-local"
             name="timeEnd"
             value={form.timeEnd}
             onChange={handleChange}
