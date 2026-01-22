@@ -87,7 +87,7 @@ def get_by_division(
     # ✅ HRD (STAFF + DIV HEAD) SEE EVERYTHING
     if is_hrd_head(current_user) or is_hrd_staff(current_user):
         return (
-            db.query(DinasDalamKota)   # ← replace DinasDalamKota per file
+            db.query(DinasDalamKota)
             .order_by(DinasDalamKota.created_at.desc())
             .all()
         )

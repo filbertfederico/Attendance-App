@@ -13,7 +13,10 @@ import "../styles/request.css";
 ===================================================== */
 function formatReadableDateTime(raw) {
   if (!raw) return "-";
-  const d = new Date(raw);
+
+  // 👇 Force UTC → browser converts to local (WIB)
+  const d = new Date(raw.endsWith("Z") ? raw : raw + "Z");
+
   return d.toLocaleString("id-ID", {
     weekday: "long",
     day: "2-digit",
@@ -21,18 +24,22 @@ function formatReadableDateTime(raw) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 }
 
 function formatDate(raw) {
   if (!raw) return "-";
-  return new Date(raw).toLocaleDateString("id-ID");
+
+  const d = new Date(raw.endsWith("Z") ? raw : raw + "Z");
+  return d.toLocaleDateString("id-ID");
 }
 
 function formatTime(raw) {
   if (!raw) return "-";
-  return raw.slice(0, 5);
+  return raw.slice(0, 5); // this is already local time text
 }
+
 
 /* =====================================================
    PDF Export
@@ -135,12 +142,10 @@ export default function DivHeadApproval() {
     const id = item.id;
     let endpoint = "";
 
-    if (item._type === "cuti") {
-      if (!item.approval_div_head) {
-        endpoint = `/cuti/${id}/${action}-div-head`;
-      } else if (!item.approval_hrd) {
-        endpoint = `/cuti/${id}/${action}-hrd`;
-      }
+    if (!item.approval_div_head) {
+      endpoint = `/cuti/${id}/div-head-${action}`;
+    } else if (!item.approval_hrd) {
+      endpoint = `/cuti/${id}/hrd-${action}`;
     } else {
       const map = {
         pribadi: "private",
@@ -177,6 +182,21 @@ export default function DivHeadApproval() {
         item.destination?.toLowerCase().includes(q)
       )
     );
+  }
+
+  function getFormTitle(type) {
+    switch (type) {
+      case "cuti":
+        return "FORM CUTI";
+      case "pribadi":
+        return "FORM IZIN PRIBADI";
+      case "dalam":
+        return "FORM DINAS DALAM KOTA";
+      case "luar":
+        return "FORM DINAS LUAR KOTA";
+      default:
+        return "FORM PERMOHONAN";
+    }
   }
 
   /* =====================================================
@@ -226,7 +246,7 @@ export default function DivHeadApproval() {
               <div className="card-header-container">
                 <img src={IMS_logo} className="card-logo" alt="logo" />
                 <div className="card-header">
-                  <h3>FORM DINAS DALAM KOTA</h3>
+                  <h3>{getFormTitle(r._type)}</h3>
                 </div>
                 <div className="card-header-spacer" />
               </div>
@@ -246,7 +266,7 @@ export default function DivHeadApproval() {
                     <span>{formatReadableDateTime(r.created_at)}</span>
                   </>
                 )}
-              
+
                 {r._type === "cuti" && (
                   <>
                     <b>Nama</b> <span>{r.name}</span>
@@ -264,7 +284,7 @@ export default function DivHeadApproval() {
                     <span>{formatReadableDateTime(r.created_at)}</span>
                   </>
                 )}
-              
+
                 {r._type === "dalam" && (
                   <>
                     <b>Nama</b> <span>{r.name}</span>
@@ -283,7 +303,7 @@ export default function DivHeadApproval() {
                     <span>{formatReadableDateTime(r.created_at)}</span>
                   </>
                 )}
-              
+
                 {r._type === "luar" && (
                   <>
                     <b>Nama</b> <span>{r.name}</span>
