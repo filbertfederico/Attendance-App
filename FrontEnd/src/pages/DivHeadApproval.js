@@ -117,49 +117,95 @@ export default function DivHeadApproval() {
     const role = userRole?.toLowerCase();
     const div = userDivision?.toUpperCase();
 
+    // ADMIN can approve final stage (handled in backend)
     if (role === "admin") return true;
 
-    if (role === "div_head" && div === "HRD & GA") {
-      return ["pending", "pending_hrd"].includes(r.approval_status);
-    }
-
-    if (role === "div_head" && div === "FINANCE") {
-      return r.approval_status === "pending_finance";
-    }
-
-    if (role === "div_head") {
-      return (
-        r.division?.toUpperCase() === div &&
+    // ===== CUTI (MULTI STAGE) =====
+    if (r._type === "cuti") {
+      // Stage 1: OPS Div Head
+      if (
+        role === "div_head" &&
+        div === r.division?.toUpperCase() &&
+        r.approval_div_head == null &&
         r.approval_status === "pending"
-      );
+      ) return true;
+
+      // Stage 2: HRD
+      if (
+        role === "div_head" &&
+        div === "HRD & GA" &&
+        r.approval_div_head === "approved" &&
+        r.approval_hrd == null &&
+        r.approval_status === "pending"
+      ) return true;
+
+      // Stage 3: Finance
+      if (
+        role === "div_head" &&
+        div === "FINANCE" &&
+        r.approval_hrd === "approved" &&
+        r.approval_finance == null &&
+        r.approval_status === "pending"
+      ) return true;
+
+      // Stage 4: Admin
+      if (
+        role === "admin" &&
+        r.approval_finance === "approved" &&
+        r.approval_admin == null &&
+        r.approval_status === "pending"
+      ) return true;
+
+      return false;
+    }
+
+    // ===== SINGLE STAGE FORMS =====
+    // Pribadi, Dinas Dalam, Dinas Luar
+    if (
+      role === "div_head" &&
+      div === r.division?.toUpperCase() &&
+      r.approval_div_head == null &&
+      r.approval_status === "pending"
+    ) {
+      return true;
     }
 
     return false;
   }
 
+
   /* -------------------------------------------------- */
   async function doAction(item, action) {
     const id = item.id;
     let endpoint = "";
-
-    if (!item.approval_div_head) {
-      endpoint = `/cuti/${id}/div-head-${action}`;
-    } else if (!item.approval_hrd) {
-      endpoint = `/cuti/${id}/hrd-${action}`;
-    } else {
+  
+    // ===== CUTI (MULTI STAGE) =====
+    if (item._type === "cuti") {
+      if (item.approval_div_head == null) {
+        endpoint = `/cuti/${id}/div-head-${action}`;
+      } else if (item.approval_hrd == null) {
+        endpoint = `/cuti/${id}/hrd-${action}`;
+      } else if (item.approval_finance == null) {
+        endpoint = `/cuti/${id}/finance-${action}`;
+      } else {
+        endpoint = `/cuti/${id}/admin-${action}`;
+      }
+    }
+    // ===== SINGLE STAGE =====
+    else {
       const map = {
         pribadi: "private",
         dalam: "dinasDalamKota",
         luar: "dinasLuarKota",
       };
-      endpoint = `/${map[item._type]}/${id}/${action}-div-head`;
+      endpoint = `/${map[item._type]}/${id}/div-head-${action}`;
     }
-
+  
     if (!endpoint) {
       Swal.fire("Error", "Invalid approval state", "error");
       return;
     }
-
+  
     try {
       await api.put(endpoint);
       Swal.fire("Success", "Updated", "success");
