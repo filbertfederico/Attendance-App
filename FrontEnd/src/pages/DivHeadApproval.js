@@ -71,6 +71,22 @@ async function exportPDF(type, id, filename) {
   document.body.removeChild(wrap);
 }
 
+function getFormTitle(type) {
+  switch (type) {
+    case "pribadi":
+      return "Izin Pribadi";
+    case "cuti":
+      return "Cuti";
+    case "dalam":
+      return "Dinas Dalam Kota";
+    case "luar":
+      return "Dinas Luar Kota";
+    default:
+      return "Permohonan";
+  }
+}
+
+
 /* =====================================================
    Main Component
 ===================================================== */
@@ -110,57 +126,125 @@ export default function DivHeadApproval() {
     load();
   }, []);
 
+  function match(r) {
+  if (!r) return false;
+
+  const q = search.toLowerCase();
+
+  // 🔍 Search (name, destination, purpose, title)
+  if (
+    q &&
+    !(
+      r.name?.toLowerCase().includes(q) ||
+      r.destination?.toLowerCase().includes(q) ||
+      r.purpose?.toLowerCase().includes(q) ||
+      r.title?.toLowerCase().includes(q)
+    )
+  ) {
+    return false;
+  }
+
+  // 📂 Filter by type
+  if (filterType && r._type !== filterType) {
+    return false;
+  }
+
+  // 🏷 Filter by status
+  if (filterStatus && r.approval_status !== filterStatus.toLowerCase()) {
+    return false;
+  }
+
+  return true;
+}
+
   /* -------------------------------------------------- */
   function canApprove(r) {
     if (!r) return false;
 
-    const role = userRole?.toLowerCase();
-    const div = userDivision?.toUpperCase();
+    const role = (userRole || "").toLowerCase();
+    const div = (userDivision || "").toUpperCase();
 
-    // ADMIN can approve final stage (handled in backend)
-    if (role === "admin") return true;
-
-    // ===== CUTI (MULTI STAGE) =====
+    /* =========================
+       CUTI (2 STAGES)
+       ========================= */
     if (r._type === "cuti") {
-      // Stage 1: OPS Div Head
+      // Stage 1: Div Head (same division)
       if (
         role === "div_head" &&
         div === r.division?.toUpperCase() &&
         r.approval_div_head == null &&
         r.approval_status === "pending"
-      ) return true;
+      ) {
+        return true;
+      }
 
-      // Stage 2: HRD
+      // Stage 2: HRD & GA (FINAL)
       if (
         role === "div_head" &&
         div === "HRD & GA" &&
         r.approval_div_head === "approved" &&
         r.approval_hrd == null &&
         r.approval_status === "pending"
-      ) return true;
+      ) {
+        return true;
+      }
 
-      // Stage 3: Finance
+      return false;
+    }
+
+    /* =========================
+       DINAS LUAR KOTA (4 STAGES)
+       ========================= */
+    if (r._type === "luar") {
+      // Stage 1: Div Head
+      if (
+        role === "div_head" &&
+        div === r.division?.toUpperCase() &&
+        r.approval_div_head == null &&
+        r.approval_status === "pending"
+      ) {
+        return true;
+      }
+
+      // Stage 2: HRD & GA
+      if (
+        role === "div_head" &&
+        div === "HRD & GA" &&
+        r.approval_div_head === "approved" &&
+        r.approval_hrd == null &&
+        r.approval_status === "pending"
+      ) {
+        return true;
+      }
+
+      // Stage 3: FINANCE
       if (
         role === "div_head" &&
         div === "FINANCE" &&
         r.approval_hrd === "approved" &&
         r.approval_finance == null &&
         r.approval_status === "pending"
-      ) return true;
+      ) {
+        return true;
+      }
 
-      // Stage 4: Admin
+      // Stage 4: ADMIN (FINAL)
       if (
         role === "admin" &&
         r.approval_finance === "approved" &&
         r.approval_admin == null &&
         r.approval_status === "pending"
-      ) return true;
+      ) {
+        return true;
+      }
 
       return false;
     }
 
-    // ===== SINGLE STAGE FORMS =====
-    // Pribadi, Dinas Dalam, Dinas Luar
+    /* =========================
+       SINGLE-STAGE FORMS
+       (Pribadi, Dinas Dalam Kota)
+       ========================= */
     if (
       role === "div_head" &&
       div === r.division?.toUpperCase() &&
@@ -178,70 +262,61 @@ export default function DivHeadApproval() {
   async function doAction(item, action) {
     const id = item.id;
     let endpoint = "";
-  
-    // ===== CUTI (MULTI STAGE) =====
+
+    /* =========================
+      CUTI (2 STAGES)
+      ========================= */
     if (item._type === "cuti") {
       if (item.approval_div_head == null) {
         endpoint = `/cuti/${id}/div-head-${action}`;
-      } else if (item.approval_hrd == null) {
-        endpoint = `/cuti/${id}/hrd-${action}`;
-      } else if (item.approval_finance == null) {
-        endpoint = `/cuti/${id}/finance-${action}`;
       } else {
-        endpoint = `/cuti/${id}/admin-${action}`;
+        endpoint = `/cuti/${id}/hrd-${action}`;
       }
     }
-    // ===== SINGLE STAGE =====
+
+    /* =========================
+      DINAS LUAR KOTA (4 STAGES)
+      ========================= */
+    else if (item._type === "luar") {
+      if (item.approval_div_head == null) {
+        endpoint = `/dinasLuarKota/${id}/div-head-${action}`;
+      } else if (item.approval_hrd == null) {
+        endpoint = `/dinasLuarKota/${id}/hrd-${action}`;
+      } else if (item.approval_finance == null) {
+        endpoint = `/dinasLuarKota/${id}/finance-${action}`;
+      } else {
+        endpoint = `/dinasLuarKota/${id}/admin-${action}`;
+      }
+    }
+
+    /* =========================
+      SINGLE-STAGE FORMS
+      ========================= */
     else {
       const map = {
         pribadi: "private",
         dalam: "dinasDalamKota",
-        luar: "dinasLuarKota",
       };
+
       endpoint = `/${map[item._type]}/${id}/div-head-${action}`;
     }
-  
+
     if (!endpoint) {
       Swal.fire("Error", "Invalid approval state", "error");
       return;
     }
-  
+
     try {
       await api.put(endpoint);
-      Swal.fire("Success", "Updated", "success");
-    } catch (e) {
-      Swal.fire("Error", e.response?.data?.detail || "Failed", "error");
+      Swal.fire("Success", "Status updated", "success");
+    } catch (err) {
+      Swal.fire(
+        "Error",
+        err.response?.data?.detail || "Approval failed",
+        "error"
+      );
     } finally {
       load();
-    }
-  }
-
-  /* -------------------------------------------------- */
-  function match(item) {
-    const q = search.toLowerCase();
-    return (
-      (filterType ? item._type === filterType : true) &&
-      (filterStatus ? item.approval_status === filterStatus : true) &&
-      (
-        item.name?.toLowerCase().includes(q) ||
-        item.purpose?.toLowerCase().includes(q) ||
-        item.destination?.toLowerCase().includes(q)
-      )
-    );
-  }
-
-  function getFormTitle(type) {
-    switch (type) {
-      case "cuti":
-        return "FORM CUTI";
-      case "pribadi":
-        return "FORM IZIN PRIBADI";
-      case "dalam":
-        return "FORM DINAS DALAM KOTA";
-      case "luar":
-        return "FORM DINAS LUAR KOTA";
-      default:
-        return "FORM PERMOHONAN";
     }
   }
 
@@ -275,7 +350,7 @@ export default function DivHeadApproval() {
             <option value="">Semua Status</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
+            <option value="Denied">Denied</option>
           </select>
         </div>
 

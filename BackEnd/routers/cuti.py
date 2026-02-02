@@ -149,8 +149,8 @@ def div_head_deny(cuti_id: int, current_user=Depends(get_current_user), db: Sess
     if not is_hrd_head(current_user) and current_user.division.upper() != form.division.upper():
         raise HTTPException(403, "Not your division")
 
-    form.approval_div_head = "rejected"
-    form.approval_status = "rejected"
+    form.approval_div_head = "denied"
+    form.approval_status = "denied"
     form.approved_by = current_user.name
 
     db.commit()
@@ -174,7 +174,7 @@ def hrd_approve(id: int, db: Session = Depends(get_db), user=Depends(get_current
         raise HTTPException(400, "Waiting Div Head")
 
     req.approval_hrd = "approved"
-    req.approval_status = "approved"  # ✅ FINAL
+    req.approval_status = "approved"
     db.commit()
     return req
 
@@ -188,8 +188,8 @@ def hrd_deny(cuti_id: int, current_user=Depends(get_current_user), db: Session =
     if not form:
         raise HTTPException(404, "Not found")
 
-    form.approval_hrd = "rejected"
-    form.approval_status = "rejected"
+    form.approval_hrd = "denied"
+    form.approval_status = "denied"
     form.approved_by = current_user.name
 
     db.commit()
