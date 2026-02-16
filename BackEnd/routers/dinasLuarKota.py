@@ -7,12 +7,11 @@ from datetime import datetime
 
 from BackEnd.models import DinasLuarKota
 from BackEnd.database import get_db
-from .auth import get_current_user
+from .auth import get_current_user, require_admin
 
 from .utils import is_hrd_head
 from .utils import is_finance_head
 from .utils import is_div_head_of_division, is_hrd_staff, is_hrd_head
-from auth import require_admin
 
 router = APIRouter()
 
