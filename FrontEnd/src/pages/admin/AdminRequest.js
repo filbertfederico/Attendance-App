@@ -100,26 +100,58 @@ export default function AdminRequest() {
 
   // APPROVE
   async function approve(item) {
-    if (item.category === "dalam") {
-      await api.put(`/dinasDalamKota/${item.rawId}/approve`);
-    } else if (item.category === "luar") {
-      await api.put(`/dinasLuarKota/${item.rawId}/approve`);
-    } else {
-      await api.put(`/private/${item.rawId}/approve`);
+    try {
+      let endpoint = "";
+
+      if (item.category === "cuti") {
+        endpoint = `/cuti/${item.rawId}/approve`;
+      } else if (item.category === "dalam") {
+        endpoint = `/dinasDalamKota/${item.rawId}/approve`;
+      } else if (item.category === "luar") {
+        endpoint = `/dinasLuarKota/${item.rawId}/approve`;
+      } else if (item.category === "pribadi") {
+        endpoint = `/private/${item.rawId}/approve`;
+      }
+
+      if (!endpoint) {
+        alert("Invalid request type");
+        return;
+      }
+
+      await api.put(endpoint);
+      load();
+    } catch (err) {
+      console.error("Approve error:", err);
+      alert(err.response?.data?.detail || "Approval failed");
     }
-    load();
   }
 
   // DENY
   async function deny(item) {
-    if (item.category === "dalam") {
-      await api.put(`/dinasDalamKota/${item.rawId}/deny`);
-    } else if (item.category === "luar") {
-      await api.put(`/dinasLuarKota/${item.rawId}/deny`);
-    } else {
-      await api.put(`/private/${item.rawId}/deny`);
+    try {
+      let endpoint = "";
+    
+      if (item.category === "cuti") {
+        endpoint = `/cuti/${item.rawId}/deny`;
+      } else if (item.category === "dalam") {
+        endpoint = `/dinasDalamKota/${item.rawId}/deny`;
+      } else if (item.category === "luar") {
+        endpoint = `/dinasLuarKota/${item.rawId}/deny`;
+      } else if (item.category === "pribadi") {
+        endpoint = `/private/${item.rawId}/deny`;
+      }
+    
+      if (!endpoint) {
+        alert("Invalid request type");
+        return;
+      }
+    
+      await api.put(endpoint);
+      load();
+    } catch (err) {
+      console.error("Deny error:", err);
+      alert(err.response?.data?.detail || "Deny failed");
     }
-    load();
   }
 
   useEffect(() => {

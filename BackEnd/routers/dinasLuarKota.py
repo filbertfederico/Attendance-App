@@ -12,6 +12,7 @@ from .auth import get_current_user
 from .utils import is_hrd_head
 from .utils import is_finance_head
 from .utils import is_div_head_of_division, is_hrd_staff, is_hrd_head
+from .utils import require_admin
 
 router = APIRouter()
 
@@ -241,47 +242,52 @@ async def finance_approve(id: int, current_user=Depends(get_current_user), db: S
 
 
 @router.put("/{id}/approve")
-async def admin_approve(id:int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    if current_user.role.lower() != "admin":
-        raise HTTPException(403, "Admin only")
+def admin_approve(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_admin),
+):
+    req = db.query(DinasLuarKota).filter(DinasLuarKota.id == id).first()
 
-    req = db.query(DinasLuarKota).filter(DinasLuarKota.id==id).first()
     if not req:
         raise HTTPException(404, "Not found")
 
-    if req.approval_finance != "approved":
-        raise HTTPException(403, "Waiting for Finance")
+    if req.approval_status != "pending":
+        raise HTTPException(400, "Already finalized")
 
-    if req.approval_status == "approved":
-        raise HTTPException(400, "Already approved")
+    if req.approval_finance != "approved":
+        raise HTTPException(403, "Waiting for Finance approval")
 
     req.approval_admin = "approved"
     req.approval_status = "approved"
     req.approved_by = current_user.name
 
     db.commit()
-    return req
+    db.refresh(req)
+
+    return {"message": "Final approval granted"}
+
 
 
 @router.put("/{id}/deny")
-async def deny_luar_kota(
+def admin_deny_luar(
     id: int,
-    current_user=Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(require_admin),
 ):
     req = db.query(DinasLuarKota).filter(DinasLuarKota.id == id).first()
+
     if not req:
         raise HTTPException(404, "Request not found")
 
-    if (
-    is_div_head_of_division(current_user, req.division)
-        or is_hrd_head(current_user)
-        or is_finance_head(current_user)
-        or current_user.role == "admin"
-    ):
-        req.approval_status = "denied"
-        req.approved_by = current_user.name
-        db.commit()
-        return {"message": "Denied"}
-    
-    raise HTTPException(403, "Not authorized")
+    if req.approval_status != "pending":
+        raise HTTPException(400, "Already finalized")
+
+    req.approval_admin = "denied"
+    req.approval_status = "denied"
+    req.approved_by = current_user.name
+
+    db.commit()
+    db.refresh(req)
+
+    return {"message": "Dinas Luar Kota denied by Admin"}

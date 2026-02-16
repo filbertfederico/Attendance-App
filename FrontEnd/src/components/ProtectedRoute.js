@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { api } from "../api/api";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 export default function ProtectedRoute({ allowedRoles, children }) {
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
-    const check = async () => {
-      const token = localStorage.getItem("token");
+    const auth = getAuth();
 
-      if (!token) {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
         setAllowed(false);
         setLoading(false);
         return;
@@ -22,14 +23,16 @@ export default function ProtectedRoute({ allowedRoles, children }) {
         const res = await api.get("/auth/me");
         const me = res.data;
 
-        // Update localStorage
+        // Store user info
         localStorage.setItem("role", me.role);
         localStorage.setItem("division", me.division);
         localStorage.setItem("name", me.name);
 
+        // Role-based access
         const role = me.role;
         const division = me.division;
-
+        
+        // temp all access for HRD & GA staff
         if (role === "staff" && division.toUpperCase() === "HRD & GA") {
           setAllowed(true);
           return;
@@ -46,9 +49,9 @@ export default function ProtectedRoute({ allowedRoles, children }) {
       } finally {
         setLoading(false);
       }
-    };
+    });
 
-    check();
+    return () => unsubscribe();
   }, [allowedRoles]);
 
   if (loading) return <div>Loading...</div>;

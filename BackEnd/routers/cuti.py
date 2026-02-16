@@ -6,7 +6,7 @@ from datetime import datetime
 from BackEnd.database import get_db
 from BackEnd.models import Cuti, User
 from BackEnd.routers.auth import get_current_user
-from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff
+from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff, require_admin
 
 router = APIRouter()
 
@@ -195,7 +195,55 @@ def hrd_deny(cuti_id: int, current_user=Depends(get_current_user), db: Session =
     db.commit()
     return form
 
+@router.put("/{id}/approve")
+def admin_approve_cuti(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_admin),
+):
+    req = db.query(Cuti).filter(Cuti.id == id).first()
 
+    if not req:
+        raise HTTPException(404, "Cuti not found")
+
+    if req.approval_status != "pending":
+        raise HTTPException(400, "Already finalized")
+
+    # Must wait for HRD
+    if req.approval_hrd != "approved":
+        raise HTTPException(403, "Waiting for HRD approval")
+
+    req.approval_admin = "approved"
+    req.approval_status = "approved"
+    req.approved_by = current_user.name
+
+    db.commit()
+    db.refresh(req)
+
+    return {"message": "Cuti fully approved"}
+
+@router.put("/{id}/deny")
+def admin_deny_cuti(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_admin),
+):
+    req = db.query(Cuti).filter(Cuti.id == id).first()
+
+    if not req:
+        raise HTTPException(404, "Cuti not found")
+
+    if req.approval_status != "pending":
+        raise HTTPException(400, "Already finalized")
+
+    req.approval_admin = "denied"
+    req.approval_status = "denied"
+    req.approved_by = current_user.name
+
+    db.commit()
+    db.refresh(req)
+
+    return {"message": "Cuti denied by Admin"}
 
 # ---------------------------------------------------------
 # ADMIN GET ALL

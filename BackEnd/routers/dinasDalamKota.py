@@ -9,7 +9,7 @@ from BackEnd.models import DinasDalamKota
 from BackEnd.database import get_db
 from .auth import get_current_user
 
-from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff
+from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff, require_admin
 
 router = APIRouter()
 
@@ -176,51 +176,100 @@ def deny_dinas_dalam(id: int, db: Session = Depends(get_db), current_user=Depend
     db.commit()
     return req
 
+# @router.put("/{id}/approve")
+# async def approve_dinas(id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+#     req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
+#     if not req:
+#         raise HTTPException(404, "Request not found")
+
+#     # Division head approval path
+#     if is_div_head_of_division(current_user, req.division):
+#         if current_user.name == req.name:
+#             raise HTTPException(403, "Division head cannot self-approve; admin approval required")
+#         req.approval_div_head = "approved"
+#         db.commit()
+#         return {"message": "division head approved"}
+
+#     # Admin final approval
+#     if current_user.role == "admin":
+#         if req.approval_div_head != "approved":
+#             raise HTTPException(403, "Waiting for division head approval")
+#         req.approval_admin = "approved"
+#         req.approval_status = "approved"
+#         req.approved_by = current_user.name
+#         db.commit()
+#         return {"message": "admin approved"}
+
+#     raise HTTPException(403, "Not authorized to approve")
+
+
+# @router.put("/{id}/deny")
+# async def deny_DinasDalamKota(
+#     id: int,
+#     current_user=Depends(get_current_user),
+#     db: Session = Depends(get_db)
+# ):
+#     req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
+#     if not req:
+#         raise HTTPException(404, "Request not found")
+
+#     if (
+#         is_div_head_of_division(current_user, req.division)
+#         or is_hrd_head(current_user)
+#         or current_user.role == "admin"
+#     ):
+#         req.approval_status = "denied"
+#         req.approved_by = current_user.name
+#         db.commit()
+#         return {"message": "denied"}
+#     raise HTTPException(403, "Not authorized to deny")
 
 @router.put("/{id}/approve")
-async def approve_dinas(id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
-    req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
-    if not req:
-        raise HTTPException(404, "Request not found")
-
-    # Division head approval path
-    if is_div_head_of_division(current_user, req.division):
-        if current_user.name == req.name:
-            raise HTTPException(403, "Division head cannot self-approve; admin approval required")
-        req.approval_div_head = "approved"
-        db.commit()
-        return {"message": "division head approved"}
-
-    # Admin final approval
-    if current_user.role == "admin":
-        if req.approval_div_head != "approved":
-            raise HTTPException(403, "Waiting for division head approval")
-        req.approval_admin = "approved"
-        req.approval_status = "approved"
-        req.approved_by = current_user.name
-        db.commit()
-        return {"message": "admin approved"}
-
-    raise HTTPException(403, "Not authorized to approve")
-
-
-@router.put("/{id}/deny")
-async def deny_DinasDalamKota(
+def admin_approve_dalam(
     id: int,
-    current_user=Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(require_admin),
 ):
     req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
+
     if not req:
         raise HTTPException(404, "Request not found")
 
-    if (
-        is_div_head_of_division(current_user, req.division)
-        or is_hrd_head(current_user)
-        or current_user.role == "admin"
-    ):
-        req.approval_status = "denied"
-        req.approved_by = current_user.name
-        db.commit()
-        return {"message": "denied"}
-    raise HTTPException(403, "Not authorized to deny")
+    if req.approval_status != "pending":
+        raise HTTPException(400, "Already finalized")
+
+    if req.approval_div_head != "approved":
+        raise HTTPException(403, "Waiting for Div Head approval")
+
+    req.approval_admin = "approved"
+    req.approval_status = "approved"
+    req.approved_by = current_user.name
+
+    db.commit()
+    db.refresh(req)
+
+    return {"message": "Dinas Dalam Kota approved"}
+
+@router.put("/{id}/deny")
+def admin_deny_dalam(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_admin),
+):
+    req = db.query(DinasDalamKota).filter(DinasDalamKota.id == id).first()
+
+    if not req:
+        raise HTTPException(404, "Request not found")
+
+    if req.approval_status != "pending":
+        raise HTTPException(400, "Already finalized")
+
+    req.approval_admin = "denied"
+    req.approval_status = "denied"
+    req.approved_by = current_user.name
+
+    db.commit()
+    db.refresh(req)
+
+    return {"message": "Dinas Dalam Kota denied by Admin"}
+

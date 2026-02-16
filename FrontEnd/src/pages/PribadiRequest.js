@@ -33,7 +33,7 @@ export default function PribadiRequest() {
       const payload = {
         name: userName,
         title: form.title,
-        division: form.division,
+        division: division,
         requestType: form.requestType,
         date: form.date,
         shortHour: form.shortHour,
@@ -86,12 +86,7 @@ export default function PribadiRequest() {
         <form onSubmit={handleSubmit}>
           <p><b>Nama:</b> {userName}</p>
 
-          <p><b>Divisi:</b><input
-            name="division"
-            value={division}
-            onChange={handleChange}
-            required
-          /></p>
+          <p><b>Divisi:</b>{division}</p>
 
           <label>Mengajukan permohonan izin:</label>
           <select
@@ -143,6 +138,7 @@ export default function PribadiRequest() {
                 name="comeLateDate"
                 value={form.comeLateDate}
                 onChange={handleChange}
+                required
               />
 
               <label>Jam:</label>
@@ -151,6 +147,7 @@ export default function PribadiRequest() {
                 name="comeLateHour"
                 value={form.comeLateHour}
                 onChange={handleChange}
+                required
               />
             </>
           )}

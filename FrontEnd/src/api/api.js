@@ -1,6 +1,7 @@
 // FrontEnd/src/api/api.js
 import axios from "axios";
 import { linkWithCredential } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 export const api = axios.create({
   // DEPLOY
@@ -9,13 +10,17 @@ export const api = axios.create({
 });
 
 // Firebase token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
+api.interceptors.request.use(async (config) => {
+  const user = getAuth().currentUser;
+
+  if (user) {
+    const token = await user.getIdToken(); // ✅ cached, auto-refresh
+    config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
+
 
 export async function getData(path) {
   const res = await api.get(path);
