@@ -6,7 +6,8 @@ from datetime import datetime
 from BackEnd.database import get_db
 from BackEnd.models import Cuti, User
 from BackEnd.routers.auth import get_current_user
-from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff, require_admin
+from .utils import is_div_head_of_division, is_hrd_head, is_hrd_staff
+from auth import require_admin
 
 router = APIRouter()
 

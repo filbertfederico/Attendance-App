@@ -12,7 +12,7 @@ from .auth import get_current_user
 from .utils import is_hrd_head
 from .utils import is_finance_head
 from .utils import is_div_head_of_division, is_hrd_staff, is_hrd_head
-from .utils import require_admin
+from auth import require_admin
 
 router = APIRouter()
 
