@@ -257,6 +257,7 @@ def admin_approve(
     if req.approval_finance != "approved":
         raise HTTPException(403, "Waiting for Finance approval")
 
+    req.approval_finance = "approved"
     req.approval_admin = "approved"
     req.approval_status = "approved"
     req.approved_by = current_user.name
@@ -282,6 +283,7 @@ def admin_deny_luar(
     if req.approval_status != "pending":
         raise HTTPException(400, "Already finalized")
 
+    req.approval_finance = "denied"
     req.approval_admin = "denied"
     req.approval_status = "denied"
     req.approved_by = current_user.name
