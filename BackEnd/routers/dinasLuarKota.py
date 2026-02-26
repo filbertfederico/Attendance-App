@@ -254,8 +254,8 @@ def admin_approve(
     if req.approval_status != "pending":
         raise HTTPException(400, "Already finalized")
 
-    if req.approval_finance != "approved":
-        raise HTTPException(403, "Waiting for Finance approval")
+    # if req.approval_finance != "approved":
+    #     raise HTTPException(403, "Waiting for Finance approval")
 
     req.approval_finance = "approved"
     req.approval_admin = "approved"
