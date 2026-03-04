@@ -210,10 +210,6 @@ def admin_approve_cuti(
     if req.approval_status != "pending":
         raise HTTPException(400, "Already finalized")
 
-    # Must wait for HRD
-    if req.approval_hrd != "approved":
-        raise HTTPException(403, "Waiting for HRD approval")
-
     req.approval_admin = "approved"
     req.approval_status = "approved"
     req.approved_by = current_user.name

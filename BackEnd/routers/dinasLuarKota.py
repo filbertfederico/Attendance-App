@@ -257,6 +257,8 @@ def admin_approve(
     # if req.approval_finance != "approved":
     #     raise HTTPException(403, "Waiting for Finance approval")
 
+    req.approval_div_head = "approved"
+    req.approval_hrd = "approved"
     req.approval_finance = "approved"
     req.approval_admin = "approved"
     req.approval_status = "approved"

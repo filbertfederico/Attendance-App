@@ -109,7 +109,7 @@ export default function AdminRequest() {
         endpoint = `/dinasDalamKota/${item.rawId}/approve`;
       } else if (item.category === "luar") {
         endpoint = `/dinasLuarKota/${item.rawId}/approve`;
-      } else if (item.category === "pribadi") {
+      } else if (item.category === "private") {
         endpoint = `/private/${item.rawId}/approve`;
       }
 
@@ -137,7 +137,7 @@ export default function AdminRequest() {
         endpoint = `/dinasDalamKota/${item.rawId}/deny`;
       } else if (item.category === "luar") {
         endpoint = `/dinasLuarKota/${item.rawId}/deny`;
-      } else if (item.category === "pribadi") {
+      } else if (item.category === "private") {
         endpoint = `/private/${item.rawId}/deny`;
       }
     
