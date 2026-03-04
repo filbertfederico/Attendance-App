@@ -238,9 +238,8 @@ def admin_approve_dalam(
     if req.approval_status != "pending":
         raise HTTPException(400, "Already finalized")
 
-    if req.approval_div_head != "approved":
-        raise HTTPException(403, "Waiting for Div Head approval")
-
+    req.approval_div_head = "approved"
+    req.approval_hrd = "approved"
     req.approval_admin = "approved"
     req.approval_status = "approved"
     req.approved_by = current_user.name
