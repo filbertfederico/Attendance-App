@@ -19,3 +19,5 @@ passlib[bcrypt]
 
 # CORS
 fastapi[all]
+
+# pip install -r requirements.txt
